@@ -13,9 +13,6 @@ class DrawToolComponent extends Component<Props, State>{
     state: State = {
         node: null
     };
-    constructor(props: Props) {
-        super(props)
-    }
 
     componentDidMount() {
         DrawTool.initialize(this.state.node as HTMLElement, {});
@@ -23,10 +20,9 @@ class DrawToolComponent extends Component<Props, State>{
 
     render() {
         return (
-            <div className="draw-tool" ref={(node) => { this.state.node = node; return node }} />
+            <div className="draw-tool" ref={(node) => { this.state.node = node}} />
         );
     }
-
 }
 
 export default DrawToolComponent;

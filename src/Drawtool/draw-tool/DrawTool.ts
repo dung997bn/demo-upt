@@ -67,7 +67,6 @@ let DrawTool = {
         if (!(target instanceof HTMLElement)) {
             throw (new Error(JSON.stringify({ error: errors.HTMLElementUndefined })));
         }
-        console.log(target);
 
         // let _target = window.hasOwnProperty('jQuery') && target instanceof jQuery ? target[0] : target;
         let _target = target;
@@ -98,6 +97,7 @@ let DrawTool = {
         }
         this.sides._collection.map((side: Side) => {
             side.setSelectableForDesign();
+            return side
         });
         this.sides.selected.FabricCanvas.renderAll();
     },
@@ -156,7 +156,7 @@ let DrawTool = {
                     if (initialZoom) {
                         _side.zoomToVal(initialZoom);
                     }
-                    if ((DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON) || (DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON_2EDIT)) {
+                    if ((DrawTool.modeToolDraw === DrawTool.modeSetup.TAP_RIBBON) || (DrawTool.modeToolDraw === DrawTool.modeSetup.TAP_RIBBON_2EDIT)) {
                         _side.zoomToVal(1.6);
                     }
 
@@ -172,6 +172,7 @@ let DrawTool = {
 
                         _side.FabricCanvas.renderAll.bind(_side.FabricCanvas);
                     });
+                    return d
                 });
 
                 resolve(null);

@@ -1,4 +1,4 @@
-import DrawTool from './DrawTool';
+// import DrawTool from './DrawTool';
 
 class DrawHistory {
     history: any = {}

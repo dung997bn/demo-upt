@@ -1,8 +1,8 @@
 export default function (border: any, offset = true) {
 
-    if (typeof border._objects !== 'undefined' && border._objects.length > 0 && border._objects[0].type === 'path') {
-        var generate = function () {
-            return `
+  if (typeof border._objects !== 'undefined' && border._objects.length > 0 && border._objects[0].type === 'path') {
+    var generate = function () {
+      return `
           if(!!this.lastBorder){
               var dataBoder=JSON.parse(this.lastBorder);
               if(dataBoder.isPath){
@@ -114,18 +114,18 @@ export default function (border: any, offset = true) {
             }
           }
           `;
-        }
-    } else {
-        var rect = Object.assign({}, {
-            left: border.left,
-            top: border.top,
-            width: border.width,
-            height: border.height,
-            strokeWidth: border.strokeWidth,
-        });
+    }
+  } else {
+    var rect = Object.assign({}, {
+      left: border.left,
+      top: border.top,
+      width: border.width,
+      height: border.height,
+      strokeWidth: border.strokeWidth,
+    });
 
-        var generate = function () {
-            return `
+    var generate = function () {
+      return `
           if(!!this.lastBorder){
             var dataBoder=JSON.parse(this.lastBorder);
             if(dataBoder.isPath){
@@ -208,7 +208,8 @@ export default function (border: any, offset = true) {
           }
   
           `
-        }
     }
-    return new Function('ctx', generate());
+  }
+
+  return new Function('ctx', generate());
 };

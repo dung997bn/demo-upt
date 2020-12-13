@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import './App.css';
 import DrawToolComponent from './Containers/DrawToolComponent';
 import DrawTool from './Drawtool/draw-tool/DrawTool';
-import escapeJSON from './Drawtool/utils/escapeJSON';
 
 interface Props { }
 
@@ -252,6 +251,9 @@ class App extends Component<Props, State> {
       return content;//JSON.parse(JSON.parse(escapeJSON(side.ProductColorSide.content)));
     });
 
+    // console.log(data);
+
+
     // store.dispatch(actions.updateProcessBar(0.7))
     let overlayImages = "";
     if (color.sides.length === 1) {
@@ -264,24 +266,24 @@ class App extends Component<Props, State> {
 
 
     DrawTool.importJSON(JSON.stringify(data)).then(() => {
-      DrawTool.sides.select(color.sides[0].ProductColorSide.content.id);
+      DrawTool.sides.select(color.sides[1].ProductColorSide.content.id);
       // store.dispatch(product_action.setLoadingData(false));
 
-      for (var i = 0; i < data.length; i++) {
-        if (data[i].border_special) {
-          DrawTool.sides.selected.saveBoder(data[i].border, data[i].border_special);
-        }
-      }
-      if (data.length === 1 && overlayImages.length > 0 && overlayImages[0] && !DrawTool.is_nail) {
-        DrawTool.sides.selected.overlay = true
-        DrawTool.sides.selected.setOverlayBorder(overlayImages[0]);
-        DrawTool.sides.selected.FabricCanvas._objects.map((item: any) => {
-          if (item.id != "FabricBorder") {
-            item.clipTo = null
-          }
-        });
-        DrawTool.sides.selected.FabricCanvas.renderAll();
-      }
+      // for (var i = 0; i < data.length; i++) {
+      //   if (data[i].border_special) {
+      //     DrawTool.sides.selected.saveBoder(data[i].border, data[i].border_special);
+      //   }
+      // }
+      // if (data.length === 1 && overlayImages.length > 0 && overlayImages[0] && !DrawTool.is_nail) {
+      //   DrawTool.sides.selected.overlay = true
+      //   DrawTool.sides.selected.setOverlayBorder(overlayImages[0]);
+      //   DrawTool.sides.selected.FabricCanvas._objects.map((item: any) => {
+      //     if (item.id != "FabricBorder") {
+      //       item.clipTo = null
+      //     }
+      //   });
+      //   DrawTool.sides.selected.FabricCanvas.renderAll();
+      // }
       DrawTool.sides.selected.FabricCanvas.renderAll();
       // store.dispatch(actions.updateProcessBar(0.99))
       setTimeout(() => {
@@ -292,7 +294,7 @@ class App extends Component<Props, State> {
         // store.dispatch(actions.setLoading(false));
         // store.dispatch(actions.updateProcessBar(100));
         // store.dispatch(actions.setLoadingProcess(false));
-        DrawTool.setLayerSetup(-1);
+        // DrawTool.setLayerSetup(-1);
         // if (DrawTool.modeSetup.LASER == DrawTool.modeToolDraw) {
         //   store.dispatch(actions.updateBorder());
         // }
@@ -306,7 +308,11 @@ class App extends Component<Props, State> {
     return (
       <div className="App" >
         <div className="app-container">
+
           <div className="app-container-inner">
+            <div className="toolbar">
+              <h1>Hello</h1>
+            </div>
             <DrawToolComponent colors={this.state.dataObj}></DrawToolComponent>
           </div>
         </div>

@@ -46,13 +46,11 @@ class Side {
     bgProportions: any
 
     constructor(id: string) {
-        let that = this;
         this.id = id;
 
         this.container = document.createElement('div');
 
         this.canvas = document.createElement('canvas');
-
         this.padding = 10;
 
         this.isZoom = false;
@@ -95,10 +93,7 @@ class Side {
         this.canvas.height = DrawTool.container.size.height || DrawTool.container.target.clientHeight;
 
         this.container.appendChild(this.canvas);
-        console.log( DrawTool.container.target);
         DrawTool.container.target.appendChild(this.container);
-
-
         this._initFabric();
         this._initEvents();
 
@@ -121,8 +116,7 @@ class Side {
     // * @param proportions {Number}
     // * @param borderSize {Object}
     // * @return {Promise}
-    setImage(url: String, size?: any, proportions: any = 1, borderSize?: any) {
-
+    setImage(url: string, size?: any, proportions: any = 1, borderSize?: any) {
         this.size = size;
 
         this.imageUrl = url;
@@ -133,48 +127,57 @@ class Side {
 
             this.FabricCanvas.setBackgroundColor('#ffffff');
 
-            this.FabricCanvas.setBackgroundImage(url, (img: fabric.fabric.Image) => {
+            fabric.fabric.Image.fromURL(url, imgObj => {
 
-                this.backdrop = this.FabricCanvas.backgroundImage;
 
-                this.backdrop.excludeFromExport = true;
+                this.FabricCanvas.setBackgroundImage(imgObj, (img: any) => {
+                    // this.backdrop = this.FabricCanvas.backgroundImage;
 
-                let canvasAspectRatio = this.canvas.width / this.canvas.height;
-                let borderAspectRatio = borderSize.width / borderSize.height;
+                    // this.backdrop.excludeFromExport = true;
 
-                if (canvasAspectRatio < borderAspectRatio) {
-                    let canvasProportions = this.FabricCanvas.width / this.size.width;
-                    this.bgProportions = (this.FabricCanvas.width * proportions) / (borderSize.width * canvasProportions);
+                    // let canvasAspectRatio = this.canvas.width / this.canvas.height;
+                    // let borderAspectRatio = borderSize.width / borderSize.height;
 
-                    this.backdrop.scaleToWidth(this.size.width * canvasProportions * this.bgProportions);
-                } else {
-                    let canvasProportions = this.FabricCanvas.height / this.size.height;
-                    this.bgProportions = (this.FabricCanvas.height * proportions) / (borderSize.height * canvasProportions);
+                    // if (canvasAspectRatio < borderAspectRatio) {
+                    //     let canvasProportions = this.FabricCanvas.width / this.size.width;
+                    //     this.bgProportions = (this.FabricCanvas.width * proportions) / (borderSize.width * canvasProportions);
 
-                    this.backdrop.scaleToHeight(this.size.height * canvasProportions * this.bgProportions);
-                }
+                    //     this.backdrop.scaleToWidth(this.size.width * canvasProportions * this.bgProportions);
+                    // } else {
+                    //     let canvasProportions = this.FabricCanvas.height / this.size.height;
+                    //     this.bgProportions = (this.FabricCanvas.height * proportions) / (borderSize.height * canvasProportions);
 
-                this._setOffset(borderSize);
+                    //     this.backdrop.scaleToHeight(this.size.height * canvasProportions * this.bgProportions);
+                    // }
 
-                this.FabricCanvas.backgroundImage.top -= this.bgOffset.top;
-                this.FabricCanvas.backgroundImage.left -= this.bgOffset.left;
+                    // this._setOffset(borderSize);
 
-                this.cmSize = this._calculateSize();
+                    // this.FabricCanvas.backgroundImage.top -= this.bgOffset.top;
+                    // this.FabricCanvas.backgroundImage.left -= this.bgOffset.left;
 
+                    // this.cmSize = this._calculateSize();
+
+                    this.FabricCanvas.renderAll();
+
+                    DrawTool.trigger('backdrop:loaded', { side: { id: this.id } });
+
+                    // DrawTool.history.pushState(this.id);
+                    resolve({ side: { id: this.id } });
+                }, {
+                    top: center.top,
+                    left: center.left,
+                    originX: 'center',
+                    originY: 'center',
+                    opacity: 1,
+                    crossOrigin: 'anonymous'
+
+                });
+
+                imgObj.scaleToWidth(this.FabricCanvas.width);
+                imgObj.scaleToHeight(this.FabricCanvas.height);
                 this.FabricCanvas.renderAll();
+            })
 
-                DrawTool.trigger('backdrop:loaded', { side: { id: this.id } });
-
-                // DrawTool.history.pushState(this.id);
-                resolve({ side: { id: this.id } });
-            }, {
-                top: center.top,
-                left: center.left,
-                originX: 'center',
-                originY: 'center',
-                opacity: 1,
-                crossOrigin: 'anonymous'
-            });
         });
     }
 
@@ -217,7 +220,6 @@ class Side {
         // this.FabricCanvas.toJSON('objects.brush');
 
         this.FabricCanvas.wrapperEl.style.display = 'none';
-
         this.FabricCanvas.upperCanvasEl.style['-webkit-tap-highlight-color'] = 'rgba(0,0,0,0)';
         this.FabricCanvas.lowerCanvasEl.style['-webkit-tap-highlight-color'] = 'rgba(0,0,0,0)';
     }
@@ -229,7 +231,7 @@ class Side {
                 DrawTool.trigger('after:render', {});
             },
             'object:added': (e: any) => {
-                if (e.target.id != "FabricBorder") {
+                if (e.target.id !== "FabricBorder") {
                     this.is_empty = false;
                 }
                 if (!e.target.excludeFromExport) {
@@ -515,11 +517,11 @@ class Side {
                             object.evented = false;
                         }
                         else {
-                            if (object.pathIndex == 1) {
+                            if (object.pathIndex === 1) {
                                 if (!!!object.areaEmbroider) {
                                     let border = DrawTool.sides.selected.FabricBorder;
                                     let border_coords = that1.getValuefromHash(border.aCoords);
-                                    if (that1.doPolygonsIntersect(border_coords, that1.getValuefromHash(object.aCoords)) && object.id != "FabricBorder") {
+                                    if (that1.doPolygonsIntersect(border_coords, that1.getValuefromHash(object.aCoords)) && object.id !== "FabricBorder") {
                                         object.selectable = true;
                                         object.evented = true;
                                     }
@@ -582,8 +584,8 @@ class Side {
     fromJSON(json: String, callback?: any, firstOfHistory = false, sizeOldWorkArea = false) {
         let data = JSON.parse(escapeJSON(json));
         let filters = {} as any;
-        let proportionsOnOld = 1;
-        Array.prototype.forEach.call(data.canvas.objects, function (item, i) {
+        // let proportionsOnOld = 1;
+        Array.prototype.forEach.call(data.canvas.objects, function (item) {
             if (typeof item.filters != 'undefined' && item.filters.length > 0) {
                 filters[item.uuid] = item.filters;
                 item.filters = [];
@@ -625,7 +627,7 @@ class Side {
             if (scaleX > scaleY) valueScaleAction = scaleY;
             scaleX = valueScaleAction * item.scaleX;
             scaleY = valueScaleAction * item.scaleY;
-            if (valueScaleAction != 0) {
+            if (valueScaleAction !== 0) {
                 item.set({
                     left: (this.center.x + item.left * valueScaleAction),
                     top: (this.center.y + item.top * valueScaleAction),
@@ -651,8 +653,8 @@ class Side {
                 this.items.setClipOtherBorder(item, this.FabricBorder, null);
             }
             if (item.lastBorder) {
-                if (DrawTool.modeToolDraw == DrawTool.modeSetup.EMBROIDER) {
-                    if (item.pathIndex == DrawTool.modeSetup.EMBROIDER) {
+                if (DrawTool.modeToolDraw === DrawTool.modeSetup.EMBROIDER) {
+                    if (item.pathIndex === DrawTool.modeSetup.EMBROIDER) {
                         var dataBoder = JSON.parse(item.lastBorder);
                         dataBoder.isSetup = false;
                         item.lastBorder = JSON.stringify(dataBoder);
@@ -665,13 +667,13 @@ class Side {
                     delete item.lastBorder;
                 }
             }
-            var ImageProcessingColorCheck = false;
-            var checkChangeToCropPathProcessing = false;
+            // var ImageProcessingColorCheck = false;
+            // var checkChangeToCropPathProcessing = false;
             var colorCheck = ["rgba(0,0,0,1)", "rgba(255,0,0,1)", "rgba(0,0,255,1)", "rgba(255,255,255,1)"];
-            if (DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON) {
+            if (DrawTool.modeToolDraw === DrawTool.modeSetup.TAP_RIBBON) {
                 colorCheck.push("rgba(255,255,255,1)");
             }
-            else if (DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON_2EDIT) {
+            else if (DrawTool.modeToolDraw === DrawTool.modeSetup.TAP_RIBBON_2EDIT) {
                 colorCheck.push("rgba(193,171,5,1)");
                 colorCheck.push("rgba(192,192,192,1)");
             }
@@ -785,7 +787,7 @@ class Side {
                 this.checkEmpty();
             } else {
 
-                if ((!!this.border_special) && (this.border_special.length == 1)) {
+                if ((!!this.border_special) && (this.border_special.length === 1)) {
                     delete data.number_embroider_sp.left;
                 }
                 this.is_empty = data.is_empty;
@@ -798,7 +800,7 @@ class Side {
 
             this.items.triggerCreated();
             this.FabricCanvas.renderAll()
-            if (typeof callback == 'function')
+            if (typeof callback === 'function')
                 callback();
         });
         this.checkEmpty()
@@ -815,18 +817,19 @@ class Side {
             let side = DrawTool.sides.selected;
             let border_coords = this.getValuefromHash(border.aCoords)
             side.FabricCanvas._objects.map((item: any) => {
-                if (this.doPolygonsIntersect(border_coords, this.getValuefromHash(item.aCoords)) && item.id != "FabricBorder") {
-                    if (item.pathIndex == 1) {
+                if (this.doPolygonsIntersect(border_coords, this.getValuefromHash(item.aCoords)) && item.id !== "FabricBorder") {
+                    if (item.pathIndex === 1) {
                         countEmbroider++;
                     }
-                    if (item.pathIndex == -1) {
+                    if (item.pathIndex === -1) {
                         countPrintDraw++;
                     }
                     else if (item.pathIndex > 2) countSpecialDraw++;
                     count++;
                 }
+                return item
             });
-            if (count == 0) {
+            if (count === 0) {
                 side.is_empty = true;
             } else {
                 side.is_empty = false;
