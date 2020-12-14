@@ -151,7 +151,7 @@ let DrawTool = {
 
                     _side.defaultWorkspaceSize = data[index].border.pixel;
 
-                    // _side.setBorder(data[index].border);
+                    _side.setBorder(data[index].border);
 
                     if (initialZoom) {
                         _side.zoomToVal(initialZoom);

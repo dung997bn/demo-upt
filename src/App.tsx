@@ -17,6 +17,7 @@ class App extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
     let dataObj: any
+    this.loadToolBar = this.loadToolBar.bind(this)
 
     dataObj =
     {
@@ -201,6 +202,10 @@ class App extends Component<Props, State> {
     this.loadProduct()
   }
 
+  loadToolBar() {
+    return <h1>ToolBar</h1>
+  }
+
 
   loadProduct() {
     DrawTool._embroideryPaths = [];
@@ -266,7 +271,7 @@ class App extends Component<Props, State> {
 
 
     DrawTool.importJSON(JSON.stringify(data)).then(() => {
-      DrawTool.sides.select(color.sides[1].ProductColorSide.content.id);
+      DrawTool.sides.select(color.sides[0].ProductColorSide.content.id);
       // store.dispatch(product_action.setLoadingData(false));
 
       // for (var i = 0; i < data.length; i++) {
@@ -294,7 +299,7 @@ class App extends Component<Props, State> {
         // store.dispatch(actions.setLoading(false));
         // store.dispatch(actions.updateProcessBar(100));
         // store.dispatch(actions.setLoadingProcess(false));
-        // DrawTool.setLayerSetup(-1);
+        DrawTool.setLayerSetup(-1);
         // if (DrawTool.modeSetup.LASER == DrawTool.modeToolDraw) {
         //   store.dispatch(actions.updateBorder());
         // }
@@ -311,7 +316,7 @@ class App extends Component<Props, State> {
 
           <div className="app-container-inner">
             <div className="toolbar">
-              <h1>Hello</h1>
+              {this.loadToolBar()}
             </div>
             <DrawToolComponent colors={this.state.dataObj}></DrawToolComponent>
           </div>

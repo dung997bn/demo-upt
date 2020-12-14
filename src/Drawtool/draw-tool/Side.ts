@@ -4,6 +4,7 @@ import fabric from 'fabric'
 import Layers from "./Layers";
 import escapeJSON from "../utils/escapeJSON";
 import clip from "../utils/clip";
+import errors from "../utils/errors";
 class Side {
     id: string
     container: any
@@ -131,31 +132,33 @@ class Side {
 
 
                 this.FabricCanvas.setBackgroundImage(imgObj, (img: any) => {
-                    // this.backdrop = this.FabricCanvas.backgroundImage;
+                    this.backdrop = this.FabricCanvas.backgroundImage;
 
-                    // this.backdrop.excludeFromExport = true;
+                    this.backdrop.excludeFromExport = true;
 
-                    // let canvasAspectRatio = this.canvas.width / this.canvas.height;
-                    // let borderAspectRatio = borderSize.width / borderSize.height;
+                    let canvasAspectRatio = this.canvas.width / this.canvas.height;
+                    let borderAspectRatio = borderSize.width / borderSize.height;
 
-                    // if (canvasAspectRatio < borderAspectRatio) {
-                    //     let canvasProportions = this.FabricCanvas.width / this.size.width;
-                    //     this.bgProportions = (this.FabricCanvas.width * proportions) / (borderSize.width * canvasProportions);
+                    if (canvasAspectRatio < borderAspectRatio) {
+                        let canvasProportions = this.FabricCanvas.width / this.size.width;
+                        this.bgProportions = (this.FabricCanvas.width * proportions) / (borderSize.width * canvasProportions);
 
-                    //     this.backdrop.scaleToWidth(this.size.width * canvasProportions * this.bgProportions);
-                    // } else {
-                    //     let canvasProportions = this.FabricCanvas.height / this.size.height;
-                    //     this.bgProportions = (this.FabricCanvas.height * proportions) / (borderSize.height * canvasProportions);
+                        // this.backdrop.scaleToWidth(this.size.width * canvasProportions * this.bgProportions);
+                        this.backdrop.scaleToWidth(this.FabricCanvas.width)
+                    } else {
+                        let canvasProportions = this.FabricCanvas.height / this.size.height;
+                        this.bgProportions = (this.FabricCanvas.height * proportions) / (borderSize.height * canvasProportions);
 
-                    //     this.backdrop.scaleToHeight(this.size.height * canvasProportions * this.bgProportions);
-                    // }
+                        // this.backdrop.scaleToHeight(this.size.height * canvasProportions * this.bgProportions);
+                        this.backdrop.scaleToHeight(this.FabricCanvas.height)
+                    }
 
-                    // this._setOffset(borderSize);
+                    this._setOffset(borderSize);
 
-                    // this.FabricCanvas.backgroundImage.top -= this.bgOffset.top;
-                    // this.FabricCanvas.backgroundImage.left -= this.bgOffset.left;
+                    this.FabricCanvas.backgroundImage.top -= this.bgOffset.top;
+                    this.FabricCanvas.backgroundImage.left -= this.bgOffset.left;
 
-                    // this.cmSize = this._calculateSize();
+                    this.cmSize = this._calculateSize();
 
                     this.FabricCanvas.renderAll();
 
@@ -173,6 +176,8 @@ class Side {
 
                 });
 
+                // imgObj.scaleToWidth(this.size.width* (this.FabricCanvas.height / this.size.height)* this.bgProportions);
+                // imgObj.scaleToHeight(this.size.height* (this.FabricCanvas.height / this.size.height)* this.bgProportions);
                 imgObj.scaleToWidth(this.FabricCanvas.width);
                 imgObj.scaleToHeight(this.FabricCanvas.height);
                 this.FabricCanvas.renderAll();
@@ -1127,6 +1132,184 @@ class Side {
             (border as any).paths = this.border.paths;
 
         return border
+    }
+
+    /**
+ *
+ * @param options {Object} options
+ * @param options.width {Number} Width of border
+ * @param options.height {Number} Height of border
+ * @param options.top {Number} Top position
+ * @param options.left {Number} Left position
+ */
+    setBorder(options: any, isReset = false) {
+
+        if (!this.cmSize) {
+            throw (new Error(JSON.stringify({ error: errors.sideNoSize })));
+            return false;
+        }
+
+        if (!options) {
+            return false;
+        }
+
+        if (this.FabricBorder) {
+            this.FabricCanvas.remove(this.FabricBorder);
+            this.FabricBorder.remove();
+        }
+
+        this.border = options;
+
+        let paddingTop = (this.FabricCanvas.height - (this.backdrop.height * this.backdrop.scaleY)) / 2;
+        let paddingLeft = (this.FabricCanvas.width - (this.backdrop.width * this.backdrop.scaleX)) / 2;
+
+        if (typeof options.paths === 'object') {
+
+            let pathCroup: any = [],
+                scaleX = 1,
+                scaleY = 1,
+                left = 0,
+                top = 0;
+
+            let that = this;
+            if (DrawTool.is_nail && options.paths.length === 1) {
+                let originalPath = options.paths[0];
+                let modifiPaths = [];
+                let firstPath = `"M${options.cm.left} ${options.cm.top} h${0.01} v${0.01} h-${0.01} v-${0.01} M${options.cm.left + options.cm.width} ${options.cm.top + options.cm.height} h -${0.01} v -${0.01} h ${0.01} v ${0.01}"`;
+                modifiPaths.push(firstPath);
+                while (true) {
+                    let paths = originalPath.replace("Z M", "Z,M").split(",");
+                    modifiPaths.push(paths[0]);
+                    if (paths.length > 1) {
+                        originalPath = paths[1];
+                    } else {
+                        break;
+                    }
+                }
+                options.paths = modifiPaths;
+            }
+
+            Array.prototype.forEach.call(options.paths, (item, i) => {
+                let path = new fabric.fabric.Path(item);
+
+                path.set({
+                    top: (path.top! - top) * scaleY,
+                    left: (path.left! - left) * scaleX,
+                    strokeWidth: DrawTool.border.strokeWidth,
+                    stroke: DrawTool.border.color,
+                    fill: i !== 0 ? 'rgba(255,255,255,0.1)' : DrawTool.border.backgroundColor,
+                    hasRotatingPoint: false,
+                    lockRotation: true,
+                    strokeDashArray: DrawTool.border.strokeDashArray,
+                    scaleX: scaleX,
+                    scaleY: scaleY
+                });
+
+                if (i === 0) {
+                    path.scaleToWidth(options.cm.width * this.cmSize.width);
+                    path.scaleToHeight(options.cm.height * this.cmSize.height);
+
+                    top = path.top!;
+                    left = path.left!;
+                    scaleX = path.scaleX!;
+                    scaleY = path.scaleY!;
+                    path.set({
+                        top: 0,
+                        left: 0
+                    });
+                }
+
+                pathCroup.push(path);
+            });
+
+            this.FabricBorder = new fabric.fabric.Group(pathCroup, {
+                width: options.cm.width * this.cmSize.width,
+                height: options.cm.height * this.cmSize.height,
+                top: options.cm.top * this.cmSize.height + paddingTop - this.bgOffset.top,
+                left: options.cm.left * this.cmSize.width + paddingLeft - this.bgOffset.left
+            });
+        } else {
+            if (!isReset) {
+                this.FabricBorder = new fabric.fabric.Rect({
+                    width: options.cm.width * this.cmSize.width,
+                    height: options.cm.height * this.cmSize.height,
+                    top: options.cm.top * this.cmSize.height + paddingTop - this.bgOffset.top,
+                    left: options.cm.left * this.cmSize.width + paddingLeft - this.bgOffset.left,
+                    strokeWidth: DrawTool.border.strokeWidth,
+                    stroke: DrawTool.border.color,
+                    fill: DrawTool.border.backgroundColor,
+                    hasRotatingPoint: false,
+                    lockRotation: true,
+                    strokeDashArray: DrawTool.border.strokeDashArray
+                });
+            } else {
+                this.FabricBorder = new fabric.fabric.Rect({
+                    width: options.cm.width * this.cmSize.width,
+                    height: options.cm.height * this.cmSize.height,
+                    top: options.cm.top,
+                    left: options.cm.left,
+                    strokeWidth: DrawTool.border.strokeWidth,
+                    stroke: DrawTool.border.color,
+                    fill: DrawTool.border.backgroundColor,
+                    hasRotatingPoint: false,
+                    lockRotation: true,
+                    strokeDashArray: DrawTool.border.strokeDashArray
+                });
+            }
+        }
+
+        this.FabricBorder.setCoords();
+        this.FabricBorder.id = 'FabricBorder';
+
+        this.FabricBorder.excludeFromExport = true;
+        this.FabricBorder.selectable = DrawTool.editable;
+        this.FabricBorder.hoverCursor = 'default';
+        for (var i = 0; i < this.items._collection.length; i++) {
+            this.items._collection[i].set({
+                clipTo: this.overlay ? "" : clip(this.FabricBorder)
+            });
+        }
+
+        this.FabricCanvas.add(this.FabricBorder);
+        this.center = this.FabricBorder.getCenterPoint();
+        //this.EmbroideryBorders = [];
+        /* let designSide = DrawTool._designBorders.find(b => b.sideId === this.id);
+         if (typeof designSide !== 'undefined') {
+           designSide.border.map((item,index)=>{
+             var path = new fabric.Rect({
+               width: item.width * this.cmSize.width,
+               height: item.height * this.cmSize.height,
+               top: item.top * this.cmSize.height + paddingTop - this.bgOffset.top,
+               left: item.left * this.cmSize.width + paddingLeft - this.bgOffset.left,
+               strokeWidth: DrawTool.border.strokeWidth,
+               stroke: 'rgba(0,0,0,0)',
+                       fill: 'rgba(0,0,0,0)',
+               hasRotatingPoint: false,
+               lockRotation: true,
+               strokeDashArray: DrawTool.border.strokeDashArray
+             });
+     
+             path.setCoords();
+             path.id = 'FabricBorder';
+             path.index = index + 1;
+             path.excludeFromExport = true;
+             path.selectable = DrawTool.editable;
+             path.hoverCursor = 'default';
+             this.FabricCanvas.add(path);
+            // this.EmbroideryBorders.push(path);
+             path.sendToBack();
+     
+             this.items._collection.forEach(item =>{
+               if(item.pathIndex === path.index){
+                 item.set({
+                   clipTo: this.overlay ? null : clip(path)
+                 })
+               }
+             })
+           })
+         }*/
+        this.FabricCanvas.renderAll();
+        return this;
     }
 
 
