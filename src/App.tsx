@@ -269,16 +269,17 @@ class App extends Component<Props, State> {
       });
     }
 
+console.log(data);
 
     DrawTool.importJSON(JSON.stringify(data)).then(() => {
-      DrawTool.sides.select(color.sides[0].ProductColorSide.content.id);
+      DrawTool.sides.select(color.sides[1].ProductColorSide.content.id);
       // store.dispatch(product_action.setLoadingData(false));
 
-      // for (var i = 0; i < data.length; i++) {
-      //   if (data[i].border_special) {
-      //     DrawTool.sides.selected.saveBoder(data[i].border, data[i].border_special);
-      //   }
-      // }
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].border_special) {
+          DrawTool.sides.selected.saveBoder(data[i].border, data[i].border_special);
+        }
+      }
       // if (data.length === 1 && overlayImages.length > 0 && overlayImages[0] && !DrawTool.is_nail) {
       //   DrawTool.sides.selected.overlay = true
       //   DrawTool.sides.selected.setOverlayBorder(overlayImages[0]);

@@ -1,5 +1,7 @@
 // import DrawTool from './DrawTool';
 
+import DrawTool from "./DrawTool";
+
 class DrawHistory {
     history: any = {}
     constructor() {
@@ -10,21 +12,21 @@ class DrawHistory {
         this.history = {};
     }
 
-    // pushState(id: string) {
+    pushState(id: string) {
 
-    //     if (typeof this.history[id] === 'undefined') {
-    //         this.history[id] = {
-    //             collection: [],
-    //             currentIndex: 0
-    //         };
-    //     }
+        if (typeof this.history[id] === 'undefined') {
+            this.history[id] = {
+                collection: [],
+                currentIndex: 0
+            };
+        }
 
-    //     let side = DrawTool.sides.getSide(id);
-    //     let state = JSON.stringify(side.FabricCanvas.toObject(['brush', 'editable', 'vertical', 'color', 'typeSVG', 'pathIndex', 'fileContent', 'fileContentURL', 'typePaths', 'lastBorder']));
-    //     this.history[id].collection = this.history[id].collection.slice(0, this.history[id].currentIndex + 1);
-    //     this.history[id].collection.push(state);
-    //     this.history[id].currentIndex = this.history[id].collection.length - 1;
-    // }
+        let side = DrawTool.sides.getSide(id);
+        let state = JSON.stringify(side.FabricCanvas.toObject(['brush', 'editable', 'vertical', 'color', 'typeSVG', 'pathIndex', 'fileContent', 'fileContentURL', 'typePaths', 'lastBorder']));
+        this.history[id].collection = this.history[id].collection.slice(0, this.history[id].currentIndex + 1);
+        this.history[id].collection.push(state);
+        this.history[id].currentIndex = this.history[id].collection.length - 1;
+    }
 
     // undo(id) {
     //     let side = DrawTool.sides.getSide(id);

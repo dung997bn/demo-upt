@@ -5,6 +5,8 @@ import Layers from "./Layers";
 import escapeJSON from "../utils/escapeJSON";
 import clip from "../utils/clip";
 import errors from "../utils/errors";
+import Item from "./Item";
+import colorPicker from "../utils/colorPicker";
 class Side {
     id: string
     container: any
@@ -45,6 +47,12 @@ class Side {
     defaultWorkspaceSize: any
     cmSize: any
     bgProportions: any
+    workspaceGrid: any
+    _panningDown: boolean
+    colorPicker: any
+    grid: any
+    workspaceRuler: any
+    ruler: any
 
     constructor(id: string) {
         this.id = id;
@@ -102,12 +110,132 @@ class Side {
 
         this.layers = new Layers(this);
 
+        this.workspaceGrid = null
+        this._panningDown = false
+
         // this.currentBrush = 'PencilBrush';
 
-        // this.colorPicker = new colorPicker(this);
+        this.colorPicker = new colorPicker(this);
 
         return this;
     }
+
+    updateSize(size: any) {
+
+        this.size = size;
+
+        this.cmSize = this._calculateSize();
+
+        this.initGrid();
+        this.initRuler();
+
+        if (this.FabricBorder) {
+            this.initWorkspaceGrid();
+            this.initWorkspaceRuler();
+        }
+
+        return this;
+    }
+
+    /**
+ *
+ * @private
+ */
+    initGrid() {
+
+        if (!this.cmSize) {
+            throw (new Error(JSON.stringify({ error: errors.sideNoSize })));
+            return false;
+        }
+
+        var state;
+
+        if (this.grid) {
+            state = this.grid.visible;
+            this.grid.destroy();
+            this.FabricCanvas.remove(this.grid);
+        } else {
+            state = false;
+        }
+
+        let cm = this.cmSize;
+
+        let stepX = cm.width;
+        let stepY = cm.height;
+
+        this.grid = new fabric.fabric.Group(undefined, {
+            excludeFromExport: true,
+            hasControls: false,
+            hoverCursor: 'default',
+            selectable: false
+        });
+
+        this.FabricCanvas.add(this.grid);
+
+        this.grid.sendToBack();
+
+        this.grid.enable = function (val = true) {
+            this.setVisible(val);
+            this.canvas.renderAll();
+        };
+
+        this.grid.setVisible(state);
+        this.FabricCanvas.renderAll();
+
+    }
+
+    /**
+     *
+     * @private
+     */
+    initRuler() {
+
+        if (!this.cmSize) {
+            throw (new Error(JSON.stringify({ error: errors.sideNoSize })));
+            return false;
+        }
+
+        var state;
+
+        if (this.ruler) {
+            state = this.ruler.visible;
+            this.ruler.destroy();
+            this.FabricCanvas.remove(this.ruler);
+        } else {
+            state = false;
+        }
+
+        let cm = this.cmSize;
+
+        let stepX = cm.width;
+        let stepY = cm.height;
+
+        this.ruler = new fabric.fabric.Group(undefined, {
+            excludeFromExport: true,
+            hasControls: false,
+            hoverCursor: 'default',
+            selectable: false
+        });
+
+        for (var x = stepX * 2; x <= this.FabricCanvas.width; x += stepX) {
+            this.ruler.add(new fabric.fabric.Line([x, 0, x, stepY * 2], { stroke: 'rgba(0, 0, 0, 0.2)', selectable: false, hoverCursor: 'default' }));
+        }
+
+        for (var y = stepY * 2; y <= this.FabricCanvas.height; y += stepY) {
+            this.ruler.add(new fabric.fabric.Line([0, y, stepX * 2, y], { stroke: 'rgba(0, 0, 0, 0.2)', selectable: false, hoverCursor: 'default' }));
+        }
+
+        this.FabricCanvas.add(this.ruler);
+
+        this.ruler.enable = function (val = true) {
+            this.setVisible(val);
+            this.canvas.renderAll();
+        };
+
+        this.ruler.setVisible(state);
+        this.FabricCanvas.renderAll();
+    }
+
 
     // * Set side image
     // * @param {String} url
@@ -164,7 +292,7 @@ class Side {
 
                     DrawTool.trigger('backdrop:loaded', { side: { id: this.id } });
 
-                    // DrawTool.history.pushState(this.id);
+                    DrawTool.history.pushState(this.id);
                     resolve({ side: { id: this.id } });
                 }, {
                     top: center.top,
@@ -262,213 +390,210 @@ class Side {
                 this.items.selected.item.selected = true;
                 DrawTool.trigger('object:selected', { side: { id: this.id }, isWorkSpaceBorder: e.target.id === 'FabricBorder' });
             },
-            //   'object:modified': (e) => {
-            //     this.checkEmpty()
-            //     if (e.target.id === 'FabricBorder') {
-            //       e.target.setCoords();
-            //       this.center = this.FabricBorder.getCenterPoint();
-            //       this.initWorkspaceGrid();
-            //       this.initWorkspaceRuler();
-            //     }
-            //     DrawTool.trigger('object:modified', {side: {id: this.id}, isWorkSpaceBorder: e.target.id === 'FabricBorder', item: e.target.toObject(['brush', 'editable', 'vertical', 'uuid']).uuid});
-            //     if(!e.target.excludeFromExport){
-            //       DrawTool.trigger('history:update', {side: {id: this.id}, isWorkSpaceBorder: false});
-            //     }
+            'object:modified': (e: any) => {
+                this.checkEmpty()
+                if (e.target.id === 'FabricBorder') {
+                    e.target.setCoords();
+                    this.center = this.FabricBorder.getCenterPoint();
+                    this.initWorkspaceGrid();
+                    this.initWorkspaceRuler();
+                }
+                DrawTool.trigger('object:modified', { side: { id: this.id }, isWorkSpaceBorder: e.target.id === 'FabricBorder', item: e.target.toObject(['brush', 'editable', 'vertical', 'uuid']).uuid });
+                if (!e.target.excludeFromExport) {
+                    DrawTool.trigger('history:update', { side: { id: this.id }, isWorkSpaceBorder: false });
+                }
 
-            //   },
-            //   'object:removed': (e) => {
-            //     this.checkEmpty()
-            //     if(e.target && !e.target.excludeFromExport){
-            //       DrawTool.trigger('object:removed', {side: {id: this.id}, item: e.target.toObject(['brush', 'editable', 'vertical', 'uuid']).uuid});
-            //       DrawTool.trigger('history:update', {side: {id: this.id}});
-            //     }
-            //   },
-            //   'editing:exited': () => {
-            //     DrawTool.trigger('editing:exited', {side: {id: this.id}});
-            //   },
-            //   'editing:entered': () => {
-            //     DrawTool.trigger('editing:entered', {side: {id: this.id}});
-            //   },
-            //   'mouse:up': (e) => {
-            //     this._panningDown = false;
+            },
+            'object:removed': (e: any) => {
+                this.checkEmpty()
+                if (e.target && !e.target.excludeFromExport) {
+                    DrawTool.trigger('object:removed', { side: { id: this.id }, item: e.target.toObject(['brush', 'editable', 'vertical', 'uuid']).uuid });
+                    DrawTool.trigger('history:update', { side: { id: this.id } });
+                }
+            },
+            'editing:exited': () => {
+                DrawTool.trigger('editing:exited', { side: { id: this.id } });
+            },
+            'editing:entered': () => {
+                DrawTool.trigger('editing:entered', { side: { id: this.id } });
+            },
+            'mouse:up': (e: any) => {
+                this._panningDown = false;
 
-            //     if(DrawTool.is_nail && this._zoom_zone){
-            //       var touches = e.e.touches && e.e.touches.length ? e.e.touches : [e.e];
-            //       var evt = (e.e.changedTouches && e.e.changedTouches[0]) || touches[0];
+                if (DrawTool.is_nail && this._zoom_zone) {
+                    var touches = e.e.touches && e.e.touches.length ? e.e.touches : [e.e];
+                    var evt = (e.e.changedTouches && e.e.changedTouches[0]) || touches[0];
 
-            //       let x = evt.layerX || evt.pageX || 0;
-            //       let y = evt.layerY || evt.pageY || 0;
+                    let x = evt.layerX || evt.pageX || 0;
+                    let y = evt.layerY || evt.pageY || 0;
 
-            //       if(DrawTool.is_mobile){
-            //         y -= 65;
-            //         this._pan_y0 -= 65;
-            //       }
+                    if (DrawTool.is_mobile) {
+                        y -= 65;
+                        this._pan_y0 -= 65;
+                    }
 
-            //       let centerX = (x + this._pan_x0) / 2;
-            //       let centerY = (y + this._pan_y0) / 2;
+                    let centerX = (x + this._pan_x0) / 2;
+                    let centerY = (y + this._pan_y0) / 2;
 
-            //       let min = {};
-            //       let minPathIndex = 0;
-            //       let minDistance = 1000000;
-            //       let zoom = this.FabricCanvas.getZoom();
+                    let min: any = {};
+                    let minPathIndex = 0;
+                    let minDistance = 1000000;
+                    let zoom = this.FabricCanvas.getZoom();
 
-            //       this.FabricBorder._objects.map((o,index)=>{
-            //         if(index !== 0){
-            //           let aX = this.FabricBorder.oCoords.tl.x + (o.aCoords.tl.x + o.aCoords.tr.x) * zoom / 2;
-            //           let aY = this.FabricBorder.oCoords.tl.y + (o.aCoords.tl.y + o.aCoords.bl.y) * zoom / 2;
-            //           let currentDistance = Math.sqrt(Math.pow(aX - centerX, 2) + Math.pow(aY - centerY, 2));
-            //           if(currentDistance < minDistance){
-            //             minDistance = currentDistance;
-            //             minPathIndex = index;
-            //             min = {x: aX, y: aY};
-            //           }
-            //         }
-            //       });
+                    this.FabricBorder._objects.map((o: any, index: number) => {
+                        if (index !== 0) {
+                            let aX = this.FabricBorder.oCoords.tl.x + (o.aCoords.tl.x + o.aCoords.tr.x) * zoom / 2;
+                            let aY = this.FabricBorder.oCoords.tl.y + (o.aCoords.tl.y + o.aCoords.bl.y) * zoom / 2;
+                            let currentDistance = Math.sqrt(Math.pow(aX - centerX, 2) + Math.pow(aY - centerY, 2));
+                            if (currentDistance < minDistance) {
+                                minDistance = currentDistance;
+                                minPathIndex = index;
+                                min = { x: aX, y: aY };
+                            }
+                        }
+                    });
 
-            //       let pointMinX = Math.min(x, this._pan_x0);
-            //       let pointMinY = Math.min(y, this._pan_y0);
-            //       let pointMaxX = Math.max(x, this._pan_x0);
-            //       let pointMaxY = Math.max(y, this._pan_y0);
+                    let pointMinX = Math.min(x, this._pan_x0);
+                    let pointMinY = Math.min(y, this._pan_y0);
+                    let pointMaxX = Math.max(x, this._pan_x0);
+                    let pointMaxY = Math.max(y, this._pan_y0);
 
-            //       let minPath = this.FabricBorder._objects[minPathIndex];
-            //       let pathMinX = this.FabricBorder.oCoords.tl.x + minPath.aCoords.tl.x * zoom;
-            //       let pathMinY = this.FabricBorder.oCoords.tl.y + minPath.aCoords.tl.y * zoom;
-            //       let pathMaxX = this.FabricBorder.oCoords.tl.x + minPath.aCoords.tr.x * zoom;
-            //       let pathMaxY = this.FabricBorder.oCoords.tl.y + minPath.aCoords.bl.y * zoom;
+                    let minPath = this.FabricBorder._objects[minPathIndex];
+                    let pathMinX = this.FabricBorder.oCoords.tl.x + minPath.aCoords.tl.x * zoom;
+                    let pathMinY = this.FabricBorder.oCoords.tl.y + minPath.aCoords.tl.y * zoom;
+                    let pathMaxX = this.FabricBorder.oCoords.tl.x + minPath.aCoords.tr.x * zoom;
+                    let pathMaxY = this.FabricBorder.oCoords.tl.y + minPath.aCoords.bl.y * zoom;
 
-            //       if(pointMinX <= pathMinX &&
-            //          pointMinY <= pathMinY &&
-            //          pointMaxX >= pathMaxX &&
-            //          pointMaxY >= pathMaxY){
-            //           this._selected_path_index = minPathIndex;
-            //           this.FabricCanvas.relativePan({ x: this.center.x - min.x, y:this.center.y - min.y});
-            //           this.FabricCanvas.renderAll();
+                    if (pointMinX <= pathMinX &&
+                        pointMinY <= pathMinY &&
+                        pointMaxX >= pathMaxX &&
+                        pointMaxY >= pathMaxY) {
+                        this._selected_path_index = minPathIndex;
+                        this.FabricCanvas.relativePan({ x: this.center.x - min.x, y: this.center.y - min.y });
+                        this.FabricCanvas.renderAll();
 
-            //           let center = new fabric.Point(this.FabricCanvas.getWidth() / 2, this.FabricCanvas.getHeight() / 2);
-            //           this.FabricCanvas.zoomToPoint(center, 3);
-            //           this.FabricCanvas.renderAll();
-            //          }
-            //     }
-            //   },
-            //   'mouse:down': (e) => {
-            //     this._panningDown = true;
+                        let center = new fabric.fabric.Point(this.FabricCanvas.getWidth() / 2, this.FabricCanvas.getHeight() / 2);
+                        this.FabricCanvas.zoomToPoint(center, 3);
+                        this.FabricCanvas.renderAll();
+                    }
+                }
+            },
+            'mouse:down': (e: any) => {
+                this._panningDown = true;
 
-            //     var touches = e.e.touches && e.e.touches.length ? e.e.touches : [e.e];
-            //     var evt = (e.e.changedTouches && e.e.changedTouches[0]) || touches[0];
+                var touches = e.e.touches && e.e.touches.length ? e.e.touches : [e.e];
+                var evt = (e.e.changedTouches && e.e.changedTouches[0]) || touches[0];
 
-            //     this._pan_x0 = evt.layerX || evt.pageX || 0;
-            //     this._pan_y0 = evt.layerY || evt.pageY || 0;
+                this._pan_x0 = evt.layerX || evt.pageX || 0;
+                this._pan_y0 = evt.layerY || evt.pageY || 0;
 
-            //     if(this.colorPicker.active){
-            //       this.colorPicker.move(e);
-            //       DrawTool.trigger('colorpicker:update', this.colorPicker.color);
-            //     }
+                if (this.colorPicker.active) {
+                    this.colorPicker.move(e);
+                    DrawTool.trigger('colorpicker:update', this.colorPicker.color);
+                }
 
-            //   },
-            //   'mouse:move': (e) => {
+            },
+            'mouse:move': (e: any) => {
 
-            //   //  DrawTool.trigger('mouse:move');
+                //  DrawTool.trigger('mouse:move');
 
-            //     if (!!(this._panning && this._panningDown && e && e.e)) {
+                if (!!(this._panning && this._panningDown && e && e.e)) {
 
-            //       var touches = e.e.touches && e.e.touches.length ? e.e.touches : [e.e];
-            //       var evt = (e.e.changedTouches && e.e.changedTouches[0]) || touches[0];
+                    var touches = e.e.touches && e.e.touches.length ? e.e.touches : [e.e];
+                    var evt = (e.e.changedTouches && e.e.changedTouches[0]) || touches[0];
 
-            //       let x = evt.layerX || evt.pageX || 0;
-            //       let y = evt.layerY || evt.pageY || 0;
+                    let x = evt.layerX || evt.pageX || 0;
+                    let y = evt.layerY || evt.pageY || 0;
 
-            //       this.FabricCanvas.relativePan({ x: x - this._pan_x0, y: y - this._pan_y0});
-            //       this._pan_x0 = x;
-            //       this._pan_y0 = y;
-            //     }
-            //     if(this.colorPicker.active){
-            //       this.colorPicker.move(e); 
-            //     }
-            //   },
-            //   'object:moving': (e) => {
-            //     if(DrawTool.is_embroidery){
-            //                 if (!!(e && e.e&&e.target)) {
-            //                       var angle=0;
-            //                       if(e.target.angle) angle=e.target.angle;
-            //                       var left1=this.FabricBorder._originalLeft;
-            //                       var left2=left1+this.FabricBorder.width;
-            //                       var widthDiv2 = e.target.width / 2 * e.target.scaleX*Math.abs(Math.cos(angle*Math.PI/180))+
-            //                       e.target.height / 2 * e.target.scaleY*Math.abs(Math.sin(angle*Math.PI/180));
-            //                       if((e.target.left+ widthDiv2)>left2){
-            //                         e.target.left=left2-widthDiv2;
-            //                       }
-            //                       else
-            //                       if((e.target.left- widthDiv2)<left1){
-            //                         e.target.left=left1+widthDiv2;
-            //                       }
-            //                 }
-            //             } else {
-            //       if (!!(e && e.e && e.target)) {
-            //         if (Math.abs(e.target.left-this.center.x)<5){
-            //           e.target.left = this.center.x;
-            //           e.target.actionMoveX=true;
-            //         }
-            //         else
-            //         {
-            //           e.target.actionMoveX=false;
-            //         }
+                    this.FabricCanvas.relativePan({ x: x - this._pan_x0, y: y - this._pan_y0 });
+                    this._pan_x0 = x;
+                    this._pan_y0 = y;
+                }
+                if (this.colorPicker.active) {
+                    this.colorPicker.move(e);
+                }
+            },
+            'object:moving': (e: any) => {
+                if (DrawTool.is_embroidery) {
+                    if (!!(e && e.e && e.target)) {
+                        var angle = 0;
+                        if (e.target.angle) angle = e.target.angle;
+                        var left1 = this.FabricBorder._originalLeft;
+                        var left2 = left1 + this.FabricBorder.width;
+                        var widthDiv2 = e.target.width / 2 * e.target.scaleX * Math.abs(Math.cos(angle * Math.PI / 180)) +
+                            e.target.height / 2 * e.target.scaleY * Math.abs(Math.sin(angle * Math.PI / 180));
+                        if ((e.target.left + widthDiv2) > left2) {
+                            e.target.left = left2 - widthDiv2;
+                        }
+                        else
+                            if ((e.target.left - widthDiv2) < left1) {
+                                e.target.left = left1 + widthDiv2;
+                            }
+                    }
+                } else {
+                    if (!!(e && e.e && e.target)) {
+                        if (Math.abs(e.target.left - this.center.x) < 5) {
+                            e.target.left = this.center.x;
+                            e.target.actionMoveX = true;
+                        }
+                        else {
+                            e.target.actionMoveX = false;
+                        }
 
-            //         if (Math.abs(e.target.top-this.center.y)<5){
-            //           e.target.top = this.center.y;
-            //           e.target.actionMoveY=true;
-            //         }
-            //         else
-            //         {
-            //           e.target.actionMoveY=false;
-            //         }
-            //       }
-            //     }
-            //   },
-            //   'object:scaling': (e) => {
-            //     if(!!e.e.touches && e.e.touches.length >1) {
-            //       return false
-            //     } else {
-            //       let obj = e.target;
-            //       if (DrawTool.is_embroidery) {
-            //         var angle=0;
-            //         if(e.target.angle) angle=e.target.angle;
-            //         var left1 = this.FabricBorder._originalLeft;
-            //         var left2 = left1 + this.FabricBorder.width;
-            //         var widthDiv2 = e.target.width  * e.target.scaleX*Math.abs(Math.cos(angle*Math.PI/180))+e.target.height / 2 * e.target.scaleY*Math.abs(Math.sin(angle*Math.PI/180));
-            //         if(widthDiv2>this.FabricBorder.width){
-            //           widthDiv2=this.FabricBorder.width/2;
-            //           e.target.left = left2 - widthDiv2;
-            //           e.target.scaleToWidth(this.FabricBorder.width);
-            //         }
-            //         else
-            //         {
-            //           widthDiv2=widthDiv2/2;
-            //           if (e.target.left + widthDiv2 > left2) {
-            //             e.target.left = left2 - widthDiv2;
-            //           } else if (e.target.left - widthDiv2 < left1) {
-            //             e.target.left = left1 + widthDiv2;
-            //           }	
-            //         }				
-            //       }
-            //       if (obj.type.includes('path') || obj.type.includes('i-text') || obj.type.includes('curvedText')) {
-            //         return false;
-            //       }
+                        if (Math.abs(e.target.top - this.center.y) < 5) {
+                            e.target.top = this.center.y;
+                            e.target.actionMoveY = true;
+                        }
+                        else {
+                            e.target.actionMoveY = false;
+                        }
+                    }
+                }
+            },
+            'object:scaling': (e: any) => {
+                if (!!e.e.touches && e.e.touches.length > 1) {
+                    return false
+                } else {
+                    let obj = e.target;
+                    if (DrawTool.is_embroidery) {
+                        var angle = 0;
+                        if (e.target.angle) angle = e.target.angle;
+                        var left1 = this.FabricBorder._originalLeft;
+                        var left2 = left1 + this.FabricBorder.width;
+                        var widthDiv2 = e.target.width * e.target.scaleX * Math.abs(Math.cos(angle * Math.PI / 180)) + e.target.height / 2 * e.target.scaleY * Math.abs(Math.sin(angle * Math.PI / 180));
+                        if (widthDiv2 > this.FabricBorder.width) {
+                            widthDiv2 = this.FabricBorder.width / 2;
+                            e.target.left = left2 - widthDiv2;
+                            e.target.scaleToWidth(this.FabricBorder.width);
+                        }
+                        else {
+                            widthDiv2 = widthDiv2 / 2;
+                            if (e.target.left + widthDiv2 > left2) {
+                                e.target.left = left2 - widthDiv2;
+                            } else if (e.target.left - widthDiv2 < left1) {
+                                e.target.left = left1 + widthDiv2;
+                            }
+                        }
+                    }
+                    if (obj.type.includes('path') || obj.type.includes('i-text') || obj.type.includes('curvedText')) {
+                        return false;
+                    }
 
-            //       let w = obj.width * obj.scaleX;
-            //       let h = obj.height * obj.scaleY;
-            //       let s = obj.strokeWidth;
+                    let w = obj.width * obj.scaleX;
+                    let h = obj.height * obj.scaleY;
+                    let s = obj.strokeWidth;
 
-            //       obj.set({
-            //         'height'     : h,
-            //         'width'      : w,
-            //         'scaleX'     : 1,
-            //         'scaleY'     : 1  
-            //       });
-            //     }
-            //   },
-            //   'object:rotating': function objectRotate(e) {
-            //     DrawTool.trigger('object:rotating');
-            //   },
+                    obj.set({
+                        'height': h,
+                        'width': w,
+                        'scaleX': 1,
+                        'scaleY': 1
+                    });
+                }
+            },
+            'object:rotating': function objectRotate(e: any) {
+                DrawTool.trigger('object:rotating');
+            },
         });
     }
 
@@ -506,6 +631,112 @@ class Side {
             this.FabricCanvas.renderAll();
         }, 500);
     }
+
+    /**
+  *
+  * @private
+  */
+    initWorkspaceGrid() {
+
+        if (!this.cmSize) {
+            throw (new Error(JSON.stringify({ error: errors.sideNoSize })));
+            return false;
+        }
+
+        var state;
+
+        if (this.workspaceGrid) {
+            state = this.workspaceGrid.visible;
+            this.workspaceGrid.destroy();
+            this.FabricCanvas.remove(this.workspaceGrid);
+        } else {
+            state = false;
+        }
+
+        let cm = this.cmSize;
+
+        this.workspaceGrid = new fabric.fabric.Group(undefined, {
+            excludeFromExport: true,
+            hasControls: false,
+            hoverCursor: 'default',
+            selectable: false
+        });
+
+        for (var x = this.FabricBorder.left; x <= this.FabricBorder.left + this.FabricBorder.width; x += cm.width) {
+            this.workspaceGrid.add(new fabric.fabric.Line([x, this.FabricBorder.top, x, this.FabricBorder.top + this.FabricBorder.height], { stroke: DrawTool.grid.color, strokeWidth: DrawTool.grid.strokeWidth, selectable: false, hoverCursor: 'default' }));
+        }
+
+        for (var y = this.FabricBorder.top; y <= this.FabricBorder.top + this.FabricBorder.height; y += cm.height) {
+            this.workspaceGrid.add(new fabric.fabric.Line([this.FabricBorder.left, y, this.FabricBorder.left + this.FabricBorder.width, y], { stroke: DrawTool.grid.color, strokeWidth: DrawTool.grid.strokeWidth, selectable: false, hoverCursor: 'default' }));
+        }
+
+        this.FabricCanvas.add(this.workspaceGrid);
+
+        this.grid.sendToBack();
+
+        this.workspaceGrid.enable = function (val = true) {
+            this.setVisible(val);
+            this.canvas.renderAll();
+        };
+
+        this.workspaceGrid.setVisible(state);
+        this.FabricCanvas.renderAll();
+
+    }
+
+
+    /**
+     *
+     * @private
+     */
+    initWorkspaceRuler() {
+        if (!this.cmSize) {
+            throw (new Error(JSON.stringify({ error: errors.sideNoSize })));
+            return false;
+        }
+
+        var state;
+
+        if (this.workspaceRuler) {
+            state = this.workspaceRuler.visible;
+            this.workspaceRuler.destroy();
+            this.FabricCanvas.remove(this.workspaceRuler);
+        } else {
+            state = false;
+        }
+
+        let cm = this.cmSize;
+
+        this.workspaceRuler = new fabric.fabric.Group(undefined, {
+            excludeFromExport: true,
+            hasControls: false,
+            hoverCursor: 'default',
+            selectable: false
+        });
+
+        for (var x = this.FabricBorder.left; x <= this.FabricBorder.left + this.FabricBorder.width; x += cm.width) {
+            this.workspaceRuler.add(new fabric.fabric.Line([x, cm.height, x, cm.height * 2], { stroke: 'rgba(0, 0, 0, 0.2)', selectable: false, hoverCursor: 'default' }));
+        }
+
+        for (var y = this.FabricBorder.top; y <= this.FabricBorder.top + this.FabricBorder.height; y += cm.height) {
+            this.workspaceRuler.add(new fabric.fabric.Line([cm.width, y, cm.width * 2, y], { stroke: 'rgba(0, 0, 0, 0.2)', selectable: false, hoverCursor: 'default' }));
+        }
+
+        this.workspaceRuler.add(new fabric.fabric.Line([this.FabricBorder.left, cm.height * 1.5, this.FabricBorder.left + this.FabricBorder.width, cm.height * 1.5], { stroke: 'rgba(0, 0, 0, 0.2)', selectable: false, hoverCursor: 'default' }));
+        this.workspaceRuler.add(new fabric.fabric.Line([cm.width * 1.5, this.FabricBorder.top, cm.width * 1.5, this.FabricBorder.top + this.FabricBorder.height], { stroke: 'rgba(0, 0, 0, 0.2)', selectable: false, hoverCursor: 'default' }));
+
+
+        this.FabricCanvas.add(this.workspaceRuler);
+
+        this.workspaceRuler.enable = function (val = true) {
+            this.setVisible(val);
+            this.canvas.renderAll();
+        };
+
+        this.workspaceRuler.setVisible(state);
+        this.FabricCanvas.renderAll();
+    }
+
 
 
     setSelectableForDesign() {
@@ -582,14 +813,18 @@ class Side {
         }
     }
 
+    _removeEvents() {
+        this.FabricCanvas.off();
+    }
+
     /**
  *
  * @param {String} json
  */
-    fromJSON(json: String, callback?: any, firstOfHistory = false, sizeOldWorkArea = false) {
+    fromJSON(json: String, callback?: any, firstOfHistory = false, sizeOldWorkArea: any = false) {
         let data = JSON.parse(escapeJSON(json));
         let filters = {} as any;
-        // let proportionsOnOld = 1;
+        let proportionsOnOld = 1;
         Array.prototype.forEach.call(data.canvas.objects, function (item) {
             if (typeof item.filters != 'undefined' && item.filters.length > 0) {
                 filters[item.uuid] = item.filters;
@@ -597,17 +832,17 @@ class Side {
             }
         });
 
-        // this._removeEvents();
+        this._removeEvents();
 
         this.items._collection = [];
 
-        // if (sizeOldWorkArea) {
-        //     if (this.FabricBorder.width < this.FabricBorder.height) {
-        //         proportionsOnOld = this.FabricBorder.width / sizeOldWorkArea.width;
-        //     } else {
-        //         proportionsOnOld = this.FabricBorder.height / sizeOldWorkArea.height;
-        //     }
-        // }
+        if (sizeOldWorkArea) {
+            if (this.FabricBorder.width < this.FabricBorder.height) {
+                proportionsOnOld = this.FabricBorder.width / sizeOldWorkArea.width;
+            } else {
+                proportionsOnOld = this.FabricBorder.height / sizeOldWorkArea.height;
+            }
+        }
 
         let canvasData = JSON.stringify({ objects: data.canvas.objects });
 
@@ -615,7 +850,7 @@ class Side {
             if (this.backdrop) {
                 this.FabricCanvas.backgroundImage = this.backdrop;
             }
-            // this.setBorder(this.border);
+            this.setBorder(this.border);
             this.FabricBorder.sendToBack();
             this.FabricCanvas.renderAll.bind(this.FabricCanvas);
             this._initEvents();
@@ -672,8 +907,9 @@ class Side {
                     delete item.lastBorder;
                 }
             }
-            // var ImageProcessingColorCheck = false;
-            // var checkChangeToCropPathProcessing = false;
+
+            var ImageProcessingColorCheck = false;
+            var checkChangeToCropPathProcessing = false;
             var colorCheck = ["rgba(0,0,0,1)", "rgba(255,0,0,1)", "rgba(0,0,255,1)", "rgba(255,255,255,1)"];
             if (DrawTool.modeToolDraw === DrawTool.modeSetup.TAP_RIBBON) {
                 colorCheck.push("rgba(255,255,255,1)");
@@ -1272,114 +1508,113 @@ class Side {
 
         this.FabricCanvas.add(this.FabricBorder);
         this.center = this.FabricBorder.getCenterPoint();
-        //this.EmbroideryBorders = [];
-        /* let designSide = DrawTool._designBorders.find(b => b.sideId === this.id);
-         if (typeof designSide !== 'undefined') {
-           designSide.border.map((item,index)=>{
-             var path = new fabric.Rect({
-               width: item.width * this.cmSize.width,
-               height: item.height * this.cmSize.height,
-               top: item.top * this.cmSize.height + paddingTop - this.bgOffset.top,
-               left: item.left * this.cmSize.width + paddingLeft - this.bgOffset.left,
-               strokeWidth: DrawTool.border.strokeWidth,
-               stroke: 'rgba(0,0,0,0)',
-                       fill: 'rgba(0,0,0,0)',
-               hasRotatingPoint: false,
-               lockRotation: true,
-               strokeDashArray: DrawTool.border.strokeDashArray
-             });
-     
-             path.setCoords();
-             path.id = 'FabricBorder';
-             path.index = index + 1;
-             path.excludeFromExport = true;
-             path.selectable = DrawTool.editable;
-             path.hoverCursor = 'default';
-             this.FabricCanvas.add(path);
-            // this.EmbroideryBorders.push(path);
-             path.sendToBack();
-     
-             this.items._collection.forEach(item =>{
-               if(item.pathIndex === path.index){
-                 item.set({
-                   clipTo: this.overlay ? null : clip(path)
-                 })
-               }
-             })
-           })
-         }*/
+
         this.FabricCanvas.renderAll();
         return this;
     }
 
+    isExistItem(item: any) {
+        let exist = false;
 
-    // getOccupiedAreaSize() {
-    //     let occupiedAreaSize = {
-    //         width: 0,
-    //         height: 0
-    //     };
+        for (let i in this.layers.list) {
+            if (this.layers.list[i].index === item.uuid) {
+                exist = true;
+                break;
+            }
+        }
 
-    //     let maxOccupiedAreaCoordinates = false;
+        return exist;
+    }
 
-    //     Array.prototype.forEach.call(this.items._collection, (item) => {
-    //         if (this.isExistItem(item) && item.intersectsWithObject(this.FabricBorder)) {
-    //             let coordinatesOccupiedArea = this.createCoordinates(item.aCoords);
+    createCoordinates(coordinates: any) {
+        return {
+            tl: {
+                x: coordinates.tl.x,
+                y: coordinates.tl.y
+            },
+            tr: {
+                x: coordinates.tr.x,
+                y: coordinates.tr.y
+            },
+            bl: {
+                x: coordinates.bl.x,
+                y: coordinates.bl.y
+            },
+            br: {
+                x: coordinates.br.x,
+                y: coordinates.br.y
+            },
+        };
+    }
 
-    //             if (coordinatesOccupiedArea.tl.x < this.FabricBorder.aCoords.tl.x) {
-    //                 coordinatesOccupiedArea.tl.x = this.FabricBorder.aCoords.tl.x;
-    //                 coordinatesOccupiedArea.bl.x = this.FabricBorder.aCoords.bl.x;
-    //             }
 
-    //             if (coordinatesOccupiedArea.tl.y < this.FabricBorder.aCoords.tl.y) {
-    //                 coordinatesOccupiedArea.tl.y = this.FabricBorder.aCoords.tl.y;
-    //                 coordinatesOccupiedArea.tr.y = this.FabricBorder.aCoords.tr.y;
-    //             }
+    getOccupiedAreaSize() {
+        let occupiedAreaSize = {
+            width: 0,
+            height: 0
+        };
 
-    //             if (coordinatesOccupiedArea.br.x > this.FabricBorder.aCoords.br.x) {
-    //                 coordinatesOccupiedArea.br.x = this.FabricBorder.aCoords.br.x;
-    //                 coordinatesOccupiedArea.tr.x = this.FabricBorder.aCoords.tr.x;
-    //             }
+        let maxOccupiedAreaCoordinates: any = false;
 
-    //             if (coordinatesOccupiedArea.br.y > this.FabricBorder.aCoords.br.y) {
-    //                 coordinatesOccupiedArea.br.y = this.FabricBorder.aCoords.br.y;
-    //                 coordinatesOccupiedArea.bl.y = this.FabricBorder.aCoords.bl.y;
-    //             }
+        Array.prototype.forEach.call(this.items._collection, (item: any) => {
+            if (this.isExistItem(item) && item.intersectsWithObject(this.FabricBorder)) {
+                let coordinatesOccupiedArea = this.createCoordinates(item.aCoords);
 
-    //             if (!maxOccupiedAreaCoordinates) {
-    //                 maxOccupiedAreaCoordinates = coordinatesOccupiedArea;
-    //             } else {
-    //                 if (coordinatesOccupiedArea.tl.x < maxOccupiedAreaCoordinates.tl.x) {
-    //                     maxOccupiedAreaCoordinates.tl.x = coordinatesOccupiedArea.tl.x;
-    //                     maxOccupiedAreaCoordinates.bl.x = coordinatesOccupiedArea.tl.x;
-    //                 }
+                if (coordinatesOccupiedArea.tl.x < this.FabricBorder.aCoords.tl.x) {
+                    coordinatesOccupiedArea.tl.x = this.FabricBorder.aCoords.tl.x;
+                    coordinatesOccupiedArea.bl.x = this.FabricBorder.aCoords.bl.x;
+                }
 
-    //                 if (coordinatesOccupiedArea.tl.y < maxOccupiedAreaCoordinates.tl.y) {
-    //                     maxOccupiedAreaCoordinates.tl.y = coordinatesOccupiedArea.tl.y;
-    //                     maxOccupiedAreaCoordinates.tr.y = coordinatesOccupiedArea.tr.y;
-    //                 }
+                if (coordinatesOccupiedArea.tl.y < this.FabricBorder.aCoords.tl.y) {
+                    coordinatesOccupiedArea.tl.y = this.FabricBorder.aCoords.tl.y;
+                    coordinatesOccupiedArea.tr.y = this.FabricBorder.aCoords.tr.y;
+                }
 
-    //                 if (coordinatesOccupiedArea.br.x > maxOccupiedAreaCoordinates.br.x) {
-    //                     maxOccupiedAreaCoordinates.br.x = coordinatesOccupiedArea.br.x;
-    //                     maxOccupiedAreaCoordinates.tr.x = coordinatesOccupiedArea.tr.x;
-    //                 }
+                if (coordinatesOccupiedArea.br.x > this.FabricBorder.aCoords.br.x) {
+                    coordinatesOccupiedArea.br.x = this.FabricBorder.aCoords.br.x;
+                    coordinatesOccupiedArea.tr.x = this.FabricBorder.aCoords.tr.x;
+                }
 
-    //                 if (coordinatesOccupiedArea.br.y > maxOccupiedAreaCoordinates.br.y) {
-    //                     maxOccupiedAreaCoordinates.br.y = coordinatesOccupiedArea.br.y;
-    //                     maxOccupiedAreaCoordinates.bl.y = coordinatesOccupiedArea.br.y;
-    //                 }
-    //             }
-    //         }
-    //     });
+                if (coordinatesOccupiedArea.br.y > this.FabricBorder.aCoords.br.y) {
+                    coordinatesOccupiedArea.br.y = this.FabricBorder.aCoords.br.y;
+                    coordinatesOccupiedArea.bl.y = this.FabricBorder.aCoords.bl.y;
+                }
 
-    //     let workAreaCenter = this.FabricBorder.getCenterPoint();
+                if (!maxOccupiedAreaCoordinates) {
+                    maxOccupiedAreaCoordinates = coordinatesOccupiedArea;
+                } else {
+                    if (coordinatesOccupiedArea.tl.x < maxOccupiedAreaCoordinates.tl.x) {
+                        maxOccupiedAreaCoordinates.tl.x = coordinatesOccupiedArea.tl.x;
+                        maxOccupiedAreaCoordinates.bl.x = coordinatesOccupiedArea.tl.x;
+                    }
 
-    //     if (maxOccupiedAreaCoordinates) {
-    //         occupiedAreaSize.width = Math.max(Math.abs(workAreaCenter.x - maxOccupiedAreaCoordinates.tl.x), Math.abs(workAreaCenter.x - maxOccupiedAreaCoordinates.tr.x)) * 2;
-    //         occupiedAreaSize.height = Math.max(Math.abs(workAreaCenter.y - maxOccupiedAreaCoordinates.tl.y), Math.abs(workAreaCenter.y - maxOccupiedAreaCoordinates.bl.y)) * 2;
-    //     }
+                    if (coordinatesOccupiedArea.tl.y < maxOccupiedAreaCoordinates.tl.y) {
+                        maxOccupiedAreaCoordinates.tl.y = coordinatesOccupiedArea.tl.y;
+                        maxOccupiedAreaCoordinates.tr.y = coordinatesOccupiedArea.tr.y;
+                    }
 
-    //     return occupiedAreaSize;
-    // }
+                    if (coordinatesOccupiedArea.br.x > maxOccupiedAreaCoordinates.br.x) {
+                        maxOccupiedAreaCoordinates.br.x = coordinatesOccupiedArea.br.x;
+                        maxOccupiedAreaCoordinates.tr.x = coordinatesOccupiedArea.tr.x;
+                    }
+
+                    if (coordinatesOccupiedArea.br.y > maxOccupiedAreaCoordinates.br.y) {
+                        maxOccupiedAreaCoordinates.br.y = coordinatesOccupiedArea.br.y;
+                        maxOccupiedAreaCoordinates.bl.y = coordinatesOccupiedArea.br.y;
+                    }
+                }
+            }
+        });
+
+        let workAreaCenter = this.FabricBorder.getCenterPoint();
+
+        if (maxOccupiedAreaCoordinates) {
+            occupiedAreaSize.width = Math.max(Math.abs(workAreaCenter.x - maxOccupiedAreaCoordinates.tl.x), Math.abs(workAreaCenter.x - maxOccupiedAreaCoordinates.tr.x)) * 2;
+            occupiedAreaSize.height = Math.max(Math.abs(workAreaCenter.y - maxOccupiedAreaCoordinates.tl.y), Math.abs(workAreaCenter.y - maxOccupiedAreaCoordinates.bl.y)) * 2;
+        }
+
+        return occupiedAreaSize;
+    }
 }
 
 export default Side

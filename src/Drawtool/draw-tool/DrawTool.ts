@@ -107,10 +107,10 @@ let DrawTool = {
         this._originalJson = json;
         let oldSideSizes: any = {};
 
-        // Array.prototype.forEach.call(this.sides._collection, (side: Side) => {
-        //     if (side.layers.list.length)
-        //         oldSideSizes[side.id] = side.getOccupiedAreaSize();
-        // });
+        Array.prototype.forEach.call(this.sides._collection, (side: Side) => {
+            if (side.layers.list.length)
+                oldSideSizes[side.id] = side.getOccupiedAreaSize();
+        });
 
         if (this.sides._collection.length) {
             this.sides.empty();
@@ -181,20 +181,19 @@ let DrawTool = {
     },
 
 
-    trigger(event: String, data: Object) {
-
+    trigger(event: String, data?: any) {
         if (!this._evented) {
             return false;
         }
 
-        // if (event === 'history:update') {
-        //     this.history.pushState(data.side.id);
-        //     this.sides.getSide(data.side.id).layers.update();
-        // }
+        if (event === 'history:update') {
+            this.history.pushState(data.side.id);
+            this.sides.getSide(data.side.id).layers.update();
+        }
 
-        // if (typeof this._callbacks[event] !== 'undefined') {
-        //     this._callbacks[event].forEach(cb => cb(JSON.stringify(data)));
-        // }
+        if (this._callbacks.hasOwnProperty(event)) {
+            this._callbacks.event.forEach((cb: any) => cb(JSON.stringify(data)));
+        }
     },
 }
 
