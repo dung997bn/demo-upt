@@ -844,7 +844,8 @@ class Side {
             }
         }
 
-        let canvasData = JSON.stringify({ objects: data.canvas.objects });
+        // let canvasData = JSON.stringify({ objects: data.canvas.objects });
+        let canvasData = data.canvas.objects
 
         this.FabricCanvas.loadFromJSON(canvasData, () => {
             if (this.backdrop) {
@@ -919,108 +920,97 @@ class Side {
                 colorCheck.push("rgba(192,192,192,1)");
             }
 
-            // if (item.uuid in filters) {
-            //     Array.prototype.forEach.call(filters[item.uuid], (filter) => {
-            //         if (!colorCheck.includes(filter.color)) filter.color = "rgba(0,0,0,1)";
-            //         if (filter.type === "RemoveColor") {
-            //             // let filterRemoveColor = new fabric.fabric.Image.filters.RemoveWhite({
-            //             //     color: filter.color,
-            //             //     distance: filter.distance
-            //             // });
-            //             // item.filters.push(filterRemoveColor);
-            //             item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
-            //         }
-            //         else if (filter.type === "ImageProcessingColor") {
-            //             ImageProcessingColorCheck = true;
-            //             // let imageProcessingColor = new fabric.fabric.Image.filters.ImageProcessingColor({
-            //             //     color: filter.color,
-            //             //     distance: filter.distance
-            //             // });
-            //             // item.filters.push(imageProcessingColor);
-            //             item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
-            //         }
-            //         else if (filter.type === "ImageChangeColorAll") {
-            //             ImageProcessingColorCheck = true;
-            //             // let imageChangeColorAll = new fabric.fabric.Image.filters.ImageChangeColorAll({
-            //             //     color: filter.color,
-            //             //     distance: filter.distance
-            //             // });
-            //             // item.filters.push(imageChangeColorAll);
-            //             item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
-            //         }
-            //         else if (filter.type === "ChangeToCropPathProcessing") {
-            //             // checkChangeToCropPathProcessing = true;
-            //             // let changeToCropPathProcessing = new fabric.fabric.Image.filters.ChangeToCropPathProcessing({
-            //             //     color: filter.color,
-            //             //     distance: filter.distance
-            //             // });
-            //             // item.filters.push(changeToCropPathProcessing);
-            //             item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
-            //         }
-            //     });
-            // }
-            // if ((DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON) || (DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON_2EDIT)) {
-            //     if (!!item.type) {
-            //         if ((item.type === "image") && (!ImageProcessingColorCheck)) {
-            //             if (!!!item.filters) item.filters = [];
-            //             if (item.brush) {
-            //                 item.filters = [];
-            //                 var setColor = "rgba(0,0,0,1)";
-            //                 if (item.color) {
-            //                     if (colorCheck.includes(item.color)) setColor = item.color;
-            //                 }
-            //                 let imageChangeColorAll = new fabric.Image.filters.ImageChangeColorAll({
-            //                     color: setColor,
-            //                     distance: 10
-            //                 });
-            //                 item.filters.push(imageChangeColorAll);
-            //                 item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
-            //             }
-            //             else {
-            //                 if ((item.filters.length == 0) || checkChangeToCropPathProcessing) {
-            //                     let imageProcessingColor = new fabric.Image.filters.ImageProcessingColor({
-            //                         color: "rgba(0,0,0,1)",
-            //                         distance: 10
-            //                     });
-            //                     item.filters.push(imageProcessingColor);
-            //                     item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
-            //                 }
-            //             }
-            //         }
-            //         else if (item.type === "path-group") {
-            //             var enableSelectPath = false;
-            //             if (!!item.paths) {
-            //                 var countItemColor = 0;
-            //                 item.paths.forEach(function (path) {
-            //                     if (colorCheck.includes(path.fill)) {
-            //                         path.set('fill', path.fill);
-            //                         enableSelectPath = true;
-            //                     }
-            //                     else {
-            //                         path.set('fill', "rgba(0,0,0,1)");
-            //                     }
-            //                 });
-            //                 /*if(enableSelectPath==false){
-            //                   for(var i=0;i<colorAcess.length;i++){
-            //                     countItemColor=i%colorCheck.length;
-            //                     item.paths.forEach(function (path) {
-            //                       if (path.fill === colorAcess[countItemColor]) {
-            //                         path.set('fill', colorCheck[countItemColor]);
-            //                       }
-            //                     });
-            //                   }
-            //                 }*/
-            //             }
-            //         }
-            //         else if (item.type === "i-text") {
-            //             if (!!item.text) {
-            //                 if (!colorCheck.includes(item.fill)) item.set('fill', "rgba(0,0,0,1)");
-            //             }
-            //         }
-            //     }
-            // }
-
-
+            if (item.uuid in filters) {
+                Array.prototype.forEach.call(filters[item.uuid], (filter) => {
+                    if (!colorCheck.includes(filter.color)) filter.color = "rgba(0,0,0,1)";
+                    if (filter.type === "RemoveColor") {
+                        let filterRemoveColor = new (fabric.fabric.Image.filters as any).RemoveColor({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(filterRemoveColor);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
+                    else if (filter.type === "ImageProcessingColor") {
+                        ImageProcessingColorCheck = true;
+                        let imageProcessingColor = new (fabric.fabric.Image.filters as any).ImageProcessingColor({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(imageProcessingColor);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
+                    else if (filter.type === "ImageChangeColorAll") {
+                        ImageProcessingColorCheck = true;
+                        let imageChangeColorAll = new (fabric.fabric.Image.filters as any).ImageChangeColorAll({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(imageChangeColorAll);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
+                    else if (filter.type === "ChangeToCropPathProcessing") {
+                        checkChangeToCropPathProcessing = true;
+                        let changeToCropPathProcessing = new (fabric.fabric.Image.filters as any).ChangeToCropPathProcessing({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(changeToCropPathProcessing);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
+                });
+            }
+            if ((DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON) || (DrawTool.modeToolDraw == DrawTool.modeSetup.TAP_RIBBON_2EDIT)) {
+                if (!!item.type) {
+                    if ((item.type === "image") && (!ImageProcessingColorCheck)) {
+                        if (!!!item.filters) item.filters = [];
+                        if (item.brush) {
+                            item.filters = [];
+                            var setColor = "rgba(0,0,0,1)";
+                            if (item.color) {
+                                if (colorCheck.includes(item.color)) setColor = item.color;
+                            }
+                            let imageChangeColorAll = new (fabric.fabric.Image.filters as any).ImageChangeColorAll({
+                                color: setColor,
+                                distance: 10
+                            });
+                            item.filters.push(imageChangeColorAll);
+                            item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                        }
+                        else {
+                            if ((item.filters.length == 0) || checkChangeToCropPathProcessing) {
+                                let imageProcessingColor = new (fabric.fabric.Image.filters as any).ImageProcessingColor({
+                                    color: "rgba(0,0,0,1)",
+                                    distance: 10
+                                });
+                                item.filters.push(imageProcessingColor);
+                                item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                            }
+                        }
+                    }
+                    else if (item.type === "path-group") {
+                        var enableSelectPath = false;
+                        if (!!item.paths) {
+                            var countItemColor = 0;
+                            item.paths.forEach(function (path: any) {
+                                if (colorCheck.includes(path.fill)) {
+                                    path.set('fill', path.fill);
+                                    enableSelectPath = true;
+                                }
+                                else {
+                                    path.set('fill', "rgba(0,0,0,1)");
+                                }
+                            });
+                  
+                        }
+                    }
+                    else if (item.type === "i-text") {
+                        if (!!item.text) {
+                            if (!colorCheck.includes(item.fill)) item.set('fill', "rgba(0,0,0,1)");
+                        }
+                    }
+                }
+            }
 
             this.items._collection.push(item);
             this.FabricCanvas.add(item)

@@ -61,7 +61,7 @@ let DrawTool = {
     is_area_embroider: false,
     fonts: null,
     rasterizedText: null,
-    modeToolDraw: null,
+    modeToolDraw: -1 as number,
     //func
     initialize(target: HTMLElement, size: any) {
         if (!(target instanceof HTMLElement)) {
@@ -103,7 +103,7 @@ let DrawTool = {
     },
 
 
-    importJSON(json: String, initialZoom?: Number, proportions?: Number | 0.5) {
+    importJSON(json: any, initialZoom?: Number, proportions?: Number | 0.5) {
         this._originalJson = json;
         let oldSideSizes: any = {};
 

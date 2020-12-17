@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import './App.css';
 import DrawToolComponent from './Containers/DrawToolComponent';
 import DrawTool from './Drawtool/draw-tool/DrawTool';
-
+import { dataDesign, dataObj, stickerCategories } from './data/datadb'
 interface Props { }
 
 interface State {
@@ -15,186 +15,11 @@ class App extends Component<Props, State> {
   };
 
   constructor(props: Props) {
+
     super(props)
-    let dataObj: any
+
     this.loadToolBar = this.loadToolBar.bind(this)
-
-    dataObj =
-    {
-      Product:
-      {
-        id: "IT401",
-        full_prin: 0,
-        title: "オックスフォードボタンダウンショートスリーブシャツ",
-        embroider_able: 0,
-        special_draw: 0,
-        category_id: 38,
-        price: 2800,
-        size: "S~XL",
-        material: "綿100％",
-        color_total: "全3色",
-        sale_price: 1800,
-        tool_price: 3600,
-        item_code_nominal: "1268-01"
-      },
-      colors:
-        [
-          {
-            ProductColor:
-              { id: "ITSU5895", title: "OX ホワイト", value: "#ffffff", is_main: 1 }
-            ,
-            sides:
-              [
-                {
-                  ProductColorSide:
-                  {
-                    id: "9637",
-                    name: "1",
-                    title: "表",
-                    image_url: "https://s3-ap-northeast-1.amazonaws.com/storage.up-t.jp/Products/fullsize/1268-01-440 l.png",
-                    print_price: 800,
-                    content:
-                    {
-                      id: "1",
-                      imageUrl: "https://s3-ap-northeast-1.amazonaws.com/storage.up-t.jp/Products/fullsize/1268-01-440 l.png",
-                      size: {
-                        cm: { width: 1000, height: 1000 },
-                        pixel: { width: 1000, height: 1000 }
-                      },
-                      canvas:
-                      {
-                        objects: [],
-                        background: "#ffffff",
-                        backgroundImage:
-                        {
-                          type: "image",
-                          originX: "center",
-                          originY: "center",
-                          left: 0,
-                          top: 0,
-                          width: 1000,
-                          height: 1000,
-                          fill: "rgb(0,0,0)",
-                          stroke: null,
-                          strokeWidth: 0,
-                          strokeDashArray: null,
-                          strokeLineCap: "butt",
-                          strokeLineJoin: "miter",
-                          strokeMiterLimit: 10,
-                          scaleX: 0.73,
-                          scaleY: 0.73,
-                          angle: 0,
-                          flipX: false,
-                          flipY: false,
-                          opacity: 0.5,
-                          shadow: null,
-                          visible: true,
-                          clipTo: null,
-                          backgroundColor: "",
-                          fillRule: "nonzero",
-                          globalCompositeOperation: "source-over",
-                          transformMatrix: null,
-                          skewX: 0,
-                          skewY: 0,
-                          uuid: "7d55846954a24821a426b83a858bd5b9",
-                          src: "https://s3-ap-northeast-1.amazonaws.com/storage.up-t.jp/Products/fullsize/1268-01-440 l.png",
-                          filters: [],
-                          resizeFilters: [],
-                          crossOrigin: "anonymous",
-                          alignX: "none",
-                          alignY: "none",
-                          meetOrSlice: "meet"
-                        }
-                      },
-                      border:
-                      {
-                        cm: { left: 585, top: 414, width: 81, height: 69 },
-                        pixel: { left: 585, top: 414, width: 81, height: 69 }
-                      }
-                    },
-                    content_over_flow: null,
-                    overlay_image: null,
-                    is_main: 1
-                  }
-                },
-                {
-                  ProductColorSide:
-                  {
-                    id: "9638",
-                    name: "2",
-                    title: "裏",
-                    image_url: "https://s3-ap-northeast-1.amazonaws.com/storage.up-t.jp/Products/fullsize/1268-01-440-back l.png",
-                    print_price: 1000,
-                    content:
-                    {
-                      id: "2",
-                      imageUrl: "https://s3-ap-northeast-1.amazonaws.com/storage.up-t.jp/Products/fullsize/1268-01-440-back l.png",
-                      size:
-                      {
-                        cm: { width: 1000, height: 1000 },
-                        pixel: { width: 1000, height: 1000 }
-                      },
-                      canvas:
-                      {
-                        objects: [],
-                        background: "#ffffff",
-                        backgroundImage:
-                        {
-                          type: "image",
-                          originX: "center",
-                          originY: "center",
-                          left: 0,
-                          top: 0,
-                          width: 1000,
-                          height: 1000,
-                          fill: "rgb(0,0,0)",
-                          stroke: null,
-                          strokeWidth: 0,
-                          strokeDashArray: null,
-                          strokeLineCap: "butt",
-                          strokeLineJoin: "miter",
-                          strokeMiterLimit: 10,
-                          scaleX: 0.73,
-                          scaleY: 0.73,
-                          angle: 0,
-                          flipX: false,
-                          flipY: false,
-                          opacity: 0.5,
-                          shadow: null,
-                          visible: true,
-                          clipTo: null,
-                          backgroundColor: "",
-                          fillRule: "nonzero",
-                          globalCompositeOperation: "source-over",
-                          transformMatrix: null,
-                          skewX: 0,
-                          skewY: 0,
-                          uuid: "7d55846954a24821a426b83a858bd5b9",
-                          src: "https://s3-ap-northeast-1.amazonaws.com/storage.up-t.jp/Products/fullsize/1268-01-440-back l.png",
-                          filters: [],
-                          resizeFilters: [],
-                          crossOrigin: "anonymous",
-                          alignX: "none",
-                          alignY: "none",
-                          meetOrSlice: "meet"
-                        }
-                      },
-                      border:
-                      {
-                        cm: { left: 356, top: 221, width: 295, height: 407 },
-                        pixel: { left: 356, top: 221, width: 295, height: 407 }
-                      }
-                    },
-                    content_over_flow: null,
-                    overlay_image: null,
-                    is_main: 0
-                  }
-                },
-              ]
-          }
-        ]
-    }
-
+    this.showDesign = this.showDesign.bind(this)
     this.state.dataObj = dataObj.colors
   }
 
@@ -203,11 +28,180 @@ class App extends Component<Props, State> {
   }
 
   loadToolBar() {
-    return <h1>ToolBar</h1>
+    return <Fragment>
+      <h1>ToolBar</h1>
+      <button onClick={() => this.showDesign()}>Show Design</button>
+    </Fragment>
+  }
+
+  showDesign() {
+    console.log(dataDesign);
+    
+    if (dataDesign.product.colors.length) {
+
+      if (dataDesign.category_id === 62) {
+        DrawTool.is_nail = true;
+      }
+      else {
+        DrawTool.is_nail = false;
+      }
+      if (!dataDesign.product.Product.embroider_able)
+        dataDesign.product.Product.embroider_able = 0;
+      if (1 === dataDesign.product.Product.embroider_able)
+        DrawTool.embroider_able = true;
+      else
+        DrawTool.embroider_able = false;
+      if ((!!dataDesign.product.Product.special_draw) && (dataDesign.product.Product.special_draw >= DrawTool.modeSetup.LASER)) {
+        DrawTool.modeToolDraw = dataDesign.product.Product.special_draw;
+      }
+      else {
+        if (DrawTool.embroider_able)
+          DrawTool.modeToolDraw = DrawTool.modeSetup.EMBROIDER;
+        else
+          DrawTool.modeToolDraw = -1;
+      }
+
+      const color = dataDesign.product.colors.find((c: any) => {  
+        return c.ProductColor.id === dataDesign.selected_color_id;
+      });
+      console.log(color);
+      
+      const data = color.sides.map((side: any) => {
+        console.log(side);
+        
+        return JSON.parse(side.ProductColorSide.content);
+      });
+
+      let overlayImages = "";
+      if (color.sides.length === 1) {
+        overlayImages = color.sides.map((side: any) => {
+          if (side.ProductColorSide.overlay_image) {
+            return side.ProductColorSide.overlay_image;
+          }
+        });
+      }
+      let currentCategory = dataDesign.category_id;
+      console.log(data);
+
+      DrawTool.importJSON(JSON.stringify(data)).then(() => {
+        for (var i = 0; i < data.length; i++) {
+          if (data[i].border_special) {
+            DrawTool.sides.selected.saveBoder(data[i].border, data[i].border_special);
+          }
+        }
+        DrawTool.sides._collection.forEach((side, index) => {
+          // store.dispatch(actions.updateProcessBar(0.8))
+          if (dataDesign.sides[side.id]) {
+            //console.log("delete fun tion by cuongLV11  LOAD_PRODUCT_WITH_DESIGN");
+            //DrawTool.updateEmbroideryBorder(JSON.parse(action.payload.sides[side.id]).embroiderySaveBorder);
+            setTimeout(() => {
+              if (dataDesign.sides[side.id].startsWith('http')) {
+
+                side.items.addImage(`${dataDesign.sides[side.id]}?_`);
+                if (data.length === 1 && overlayImages.length > 0 && overlayImages[index] && !DrawTool.is_nail) {
+                  DrawTool.sides.selected.overlay = true
+                  DrawTool.sides.selected.setOverlayBorder(overlayImages[index]);
+                  DrawTool.sides.selected.FabricCanvas._objects.map((item: any) => {
+                    if (item.id != "FabricBorder") {
+                      item.clipTo = null
+                    }
+                  })
+                  DrawTool.sides.selected.FabricCanvas.renderAll();
+                }
+                // store.dispatch(actions.updateProcessBar(0.99));
+                // store.dispatch(product_action.setLoadingData(false));
+                // store.dispatch(actions.setLoadingProcess(false));
+                // store.dispatch(actions.setLoading(false));
+                DrawTool.setLayerSetup(-1);
+              } else {
+                side.fromJSON(dataDesign.sides[side.id], () => {
+                  // store.dispatch(product_action.setLoadingData(false));
+                  if (data.length === 1 && overlayImages.length > 0 && overlayImages[index] && !DrawTool.is_nail) {
+                    DrawTool.sides.selected.overlay = true
+                    DrawTool.sides.selected.FabricCanvas._objects.map((item: any) => {
+                      if (item.id != "FabricBorder") {
+                        item.clipTo = null
+                      }
+                      DrawTool.sides.selected.setOverlayBorder(overlayImages[index]);
+                    })
+                    DrawTool.sides.selected.FabricCanvas.renderAll();
+                  }
+
+                  setTimeout(() => {
+                    // store.dispatch(actions.updateLayers({
+                    //   layers: DrawTool.sides.selected.layers.update().reverse(),
+                    //   side: DrawTool.sides.selected.id,
+                    // }));
+                    // store.dispatch(actions.setActiveTool('pointer'));
+                    // store.dispatch(actions.updateProcessBar(0.99));
+                    // store.dispatch(actions.setLoadingProcess(false));
+                    // store.dispatch(actions.setLoading(false));
+                    DrawTool.setLayerSetup(-1);
+                  }, 2000);
+                }, true);
+              }
+            }, 1000)
+          }
+        });
+        DrawTool.trigger('product:load', {});
+
+        setTimeout(() => {
+          if (DrawTool.modeSetup.LASER == DrawTool.modeToolDraw) {
+            // store.dispatch(actions.updateBorder());
+          }
+        }, 3500);
+        setTimeout(() => {
+
+          
+          DrawTool.sides._collection.forEach(function (side) {
+            console.log(side.items._collection);
+            for (var i = 0; i < side.items._collection.length; i++) {
+              if (side.items._collection[i].type == "image") {
+                var infoImage = side.items._collection[i];
+                var xhr = new XMLHttpRequest();
+                xhr.open("HEAD", infoImage.src, true); // Notice "HEAD" instead of "GET",
+                xhr.onreadystatechange = function () {
+                  if (this.readyState == this.DONE) {
+                    //console.log("get alll info .................................... checkk allcd  ");
+                    //console.log(this);
+                    var fileSizeGet = parseInt(this.getResponseHeader("Content-Length")!);
+                    var dataurl = this.responseURL;
+                    if (fileSizeGet < 0) fileSizeGet = 0;
+                    //console.log("APPLY_TEMPLATE ..........................");
+                    //console.log(fileSizeGet);
+                    //console.log(fileSizeGet);
+                    if (!isNaN(fileSizeGet)) {
+                      DrawTool.sides._collection.forEach(function (sideIn) {
+                        sideIn.items._collection.forEach((element: any) => {
+                          if (element.src == dataurl) {
+                            element.sizeImage = fileSizeGet;
+                          }
+                        });
+                      });
+                      // store.dispatch(actions.updateCapacityUploading(fileSizeGet));
+                      // console.log(DrawTool.sides.selected.items._collection);
+                      //console.log(linkUp);
+                    }
+                  }
+                };
+                xhr.send();
+              }
+            }
+
+          });
+        }, 2100);
+      });
+
+      DrawTool.sides.select(
+        JSON.parse(JSON.parse(JSON.stringify(color.sides[0].ProductColorSide.content))).id
+      );
+    }
   }
 
 
   loadProduct() {
+    // console.log(dataDesign);
+
     DrawTool._embroideryPaths = [];
     // if (action.payload.Product && action.payload.colors.length) {
     //   if (action.payload.Product.category_id === 62) {
@@ -269,7 +263,7 @@ class App extends Component<Props, State> {
       });
     }
 
-console.log(data);
+    console.log(data);
 
     DrawTool.importJSON(JSON.stringify(data)).then(() => {
       DrawTool.sides.select(color.sides[1].ProductColorSide.content.id);
