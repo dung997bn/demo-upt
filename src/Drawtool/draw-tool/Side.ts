@@ -138,6 +138,326 @@ class Side {
     }
 
     /**
+ * Get
+ * @return {String}
+ */
+    toJSON() {
+        DrawTool.is_data.map((side: Side) => {
+            if (side.border_special) {
+                var borderEmbroider1 = { sideId: side.id, border: side.border_special, bd: side.border }
+                DrawTool._embroideryPaths.push(borderEmbroider1);
+
+            } else {
+                var pathEmbroider = `M${side.border.cm.left} ${side.border.cm.top} h${side.border.cm.width} v${side.border.cm.height} h-${side.border.cm.width} Z`;
+                if (DrawTool.embroider_able) {
+                    side.border.paths = [pathEmbroider];
+                }
+                var borderEmbroider2 = { sideId: side.id, border: [{ cm: side.border.cm, paths: side.border.paths, pixel: side.border.pixel, name: "" }], bd: side.border };
+                DrawTool._embroideryPaths.push(borderEmbroider2);
+            }
+        });
+
+        let _formattedSide = {
+            id: this.id,
+            imageUrl: this.imageUrl,
+            size: this.size,
+            is_empty: this.is_empty,
+            number_embroider: this.number_embroider,
+            number_special_draw: this.number_special_draw,
+            number_draw: this.number_draw,
+            number_embroider_sp: this.number_embroider_sp,
+            number_print_draw: this.number_print_draw,
+            canvas: this.FabricCanvas.toObject(['brush', 'editable', 'vertical', 'color', 'typeSVG', 'pathIndex', 'fileContent', 'fileContentURL', 'typePaths', 'lastBorder', 'areaEmbroider', 'pathDLaser']),
+            fonts: DrawTool.fonts,
+            border_special: this.border_special,
+            border: null as any,
+            factor: null as any,
+            about: null as any,
+            design_border: null as any
+        };
+
+        var itemOrder = [];
+
+        for (var i = 0; i < _formattedSide.canvas.objects.length; i++) {
+            if (_formattedSide.canvas.objects[i].pathIndex) {
+                if (_formattedSide.canvas.objects[i].pathIndex < 1) {
+                    itemOrder.push(_formattedSide.canvas.objects[i]);
+                }
+            }
+            else {
+                itemOrder.push(_formattedSide.canvas.objects[i]);
+            }
+        }
+
+        for (var i = 0; i < _formattedSide.canvas.objects.length; i++) {
+            if ((_formattedSide.canvas.objects[i].pathIndex) && (_formattedSide.canvas.objects[i].pathIndex > 0)) {
+                itemOrder.push(_formattedSide.canvas.objects[i]);
+            }
+
+        }
+        _formattedSide.canvas.objects = itemOrder;
+
+        _formattedSide.canvas.objects.forEach((item: any, i: number) => {
+            item.left = item.left - this.center.x;
+            item.top = item.top - this.center.y;
+            item.clipTo = null;
+            if (!item.type.includes('text') && !!item.fill) {
+                item.fill = null
+            }
+
+            if (item.selected) {
+                item.selectable = false;
+            }
+
+            if (item.type.includes('text') && DrawTool.rasterizedText) {
+                if (DrawTool.rasterizedText![item.uuid]) {
+                    let textObject = fabric.fabric.util.object.clone(item);
+                    item.visible = false;
+
+                    textObject.type = 'image';
+                    textObject.fill = 'rgb(0,0,0)';
+                    textObject.strokeWidth = 0;
+                    textObject.crossOrigin = 'anonymous';
+                    textObject.src = DrawTool.rasterizedText![item.uuid];
+                    textObject.alignX = 'none';
+                    textObject.alignY = 'none';
+                    textObject.meetOrSlice = 'meet';
+                    textObject.filters = [];
+                    textObject.resizeFilters = [];
+                    textObject.width = textObject.width * textObject.scaleX + textObject.width * textObject.scaleX * 0.1;
+                    textObject.height = textObject.height * textObject.scaleY + textObject.height * textObject.scaleY * 0.1;
+                    textObject.scaleX = 1;
+                    textObject.scaleY = 1;
+                    let cos = Math.cos(textObject.angle * Math.PI / 180);
+                    let sin = Math.sin(textObject.angle * Math.PI / 180);
+
+                    textObject.left += textObject.width * textObject.scaleX * 0.05 * cos;
+                    textObject.top += textObject.width * textObject.scaleX * 0.05 * sin;
+
+                    delete textObject['text'];
+                    delete textObject['fontSize'];
+                    delete textObject['fontWeight'];
+                    delete textObject['fontFamily'];
+                    delete textObject['fontStyle'];
+                    delete textObject['lineHeight'];
+                    delete textObject['textDecoration'];
+                    delete textObject['textAlign'];
+                    delete textObject['textBackgroundColor'];
+                    delete textObject['charSpacing'];
+                    delete textObject['editable'];
+                    delete textObject['vertical'];
+                    delete textObject['styles'];
+
+                    textObject.pathIndex = item.pathIndex;
+                    textObject.areaEmbroider = item.areaEmbroider
+                    _formattedSide.canvas.objects[i] = textObject;
+                    _formattedSide.canvas.objects.push(item);
+                }
+            }
+            if (item.brush) item.pathIndex = -1;
+        });
+
+        _formattedSide.canvas.objects_print = [];
+        _formattedSide.canvas.objects_embroidery = [];
+        _formattedSide.canvas.objects_special_draw = [];
+        _formattedSide.canvas.objects.forEach((item: any, i: number) => {
+            if ((item.brush) || (item.pathIndex === -1)) {
+                _formattedSide.canvas.objects_print.push(item);
+            } else {
+
+                if ((item.pathIndex) && (item.pathIndex == DrawTool.modeSetup.LASER)) {
+                    _formattedSide.border = this.getBorder();
+                    item.pathBorderLaser = {
+                        size: this.size, border: _formattedSide.border.cm,
+                        center: this.center, _pan_x0: this._pan_x0, _pan_y0: this._pan_y0,
+                        borderPixel: _formattedSide.border.pixel
+                    };
+                    _formattedSide.canvas.objects_special_draw.push(item);
+                }
+                else if ((item.pathIndex) && (item.pathIndex == DrawTool.modeSetup.EMBROIDER)) {
+                    _formattedSide.canvas.objects_embroidery.push(item);
+                }
+                else {
+                    _formattedSide.canvas.objects_print.push(item);
+                }
+            }
+        });
+
+        if (this.backdrop) {
+            _formattedSide.imageUrl = this.imageUrl
+        }
+
+        if (this.FabricBorder) {
+            _formattedSide.border = this.getBorder();
+            _formattedSide.factor = {
+                x: this.getBorder().pixel.width / this.defaultWorkspaceSize.width,
+                y: this.getBorder().pixel.height / this.defaultWorkspaceSize.height,
+            }
+        }
+
+        _formattedSide.about = {
+            appVersion: navigator.appVersion,
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            languages: navigator.languages,
+        };
+        DrawTool._embroideryPaths.splice(4);
+        let designSide = DrawTool._designBorders.find(b => b.sideId === this.id);
+        let designSideEmbroider = DrawTool._embroideryPaths.find((b: any) => b.sideId === this.id);
+        if (typeof designSide !== 'undefined') {
+            let paths = DrawTool.recs2paths(designSide.border);
+            const pathOset = 1.1;
+            var ptS = '';
+            designSideEmbroider.border.forEach((el: any) => {
+                if (el.paths && el.cm) {
+                    ptS += el.paths + ' ';
+                }
+            });
+            if ((DrawTool.modeToolDraw == DrawTool.modeSetup.EMBROIDER)) {
+                var patN: any = {
+                    paths: [ptS],
+                    cm: designSideEmbroider.bd.cm,
+                    pixel: designSideEmbroider.bd.pixel
+                };
+                if (designSideEmbroider.sideId !== '1') {
+                    delete patN.paths;
+                }
+                _formattedSide.design_border = patN;
+            }
+
+        }
+        return JSON.stringify(_formattedSide);
+    }
+
+    /**
+   *
+   * @param {String} json
+   */
+    fromJSONLayer(json: any, callback?: any, firstOfHistory = false, sizeOldWorkArea: any = false) {
+        let data = JSON.parse(escapeJSON(json));
+        let filters = {};
+        let proportionsOnOld = 1;
+        Array.prototype.forEach.call(data.canvas.objects, function (item, i) {
+            if (typeof item.filters != 'undefined' && item.filters.length > 0) {
+                // Object.defineProperty(filters, 'item.uuid', { value: item.filters })
+                (filters as any)[item.uuid] = item.filters;
+                item.filters = [];
+            }
+        });
+
+        this._removeEvents();
+
+        this.items._collection = [];
+
+        if (sizeOldWorkArea) {
+            if (this.FabricBorder.width < this.FabricBorder.height) {
+                proportionsOnOld = this.FabricBorder.width / sizeOldWorkArea.width;
+            } else {
+                proportionsOnOld = this.FabricBorder.height / sizeOldWorkArea.height;
+            }
+        }
+console.log(data.canvas.objects);
+
+        let canvasData = JSON.stringify({ objects: data.canvas.objects });
+        console.log(canvasData);
+        
+
+        this.FabricCanvas.loadFromJSON(canvasData, () => {
+            if (this.backdrop) {
+                this.FabricCanvas.backgroundImage = this.backdrop;
+            }
+            //this.setBorder(this.border);
+            this.FabricBorder.sendToBack();
+            this.FabricCanvas.renderAll.bind(this.FabricCanvas);
+            this._initEvents();
+            this.layers.update();
+
+            if (firstOfHistory) {
+                DrawTool.history.history[DrawTool.sides.selected.id].collection = [JSON.stringify(this.FabricCanvas)];
+                DrawTool.history.history[DrawTool.sides.selected.id].currentIndex = 0;
+            }
+        }, (o: any, item: any) => {
+
+            let scaleX = (this.getBorder().pixel.width / data.border.pixel.width);
+            let scaleY = (this.getBorder().pixel.height / data.border.pixel.height);
+            var valueScaleAction = scaleX;
+            if (scaleX > scaleY) valueScaleAction = scaleY;
+            scaleX = valueScaleAction * item.scaleX;
+            scaleY = valueScaleAction * item.scaleY;
+            if (valueScaleAction != 0) {
+                item.set({
+                    left: (this.center.x + item.left * valueScaleAction),
+                    top: (this.center.y + item.top * valueScaleAction),
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    'sizeImage': 0,
+                    "useItemData": true,
+                    clipTo: this.overlay ? "" : clip(this.FabricBorder),
+                });
+            }
+            else {
+                item.set({
+                    left: this.center.x + ((item.left / data.factor.x) * ((this.getBorder().pixel.left || 1) / (this.defaultWorkspaceSize.left || 1))),
+                    top: this.center.y + ((item.top / data.factor.y) * ((this.getBorder().pixel.top || 1) / (this.defaultWorkspaceSize.top || 1))),
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    'sizeImage': 0,
+                    "useItemData": true,
+                    clipTo: this.overlay ? "" : clip(this.FabricBorder),
+                });
+            }
+
+            if (item.uuid in filters) {
+                Array.prototype.forEach.call((filters as any)[item.uuid], (filter) => {
+                    if (filter.type === "RemoveColor") {
+                        let filterRemoveColor = new (fabric.fabric.Image.filters as any).RemoveColor({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(filterRemoveColor);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
+                    else if (filter.type === "ImageProcessingColor") {
+                        let imageProcessingColor = new (fabric.fabric.Image.filters as any).ImageProcessingColor({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(imageProcessingColor);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
+                });
+            }
+
+            this.items._collection.push(item);
+            this.FabricCanvas.add(item)
+            if (data.is_empty) {
+                this.checkEmpty();
+            } else {
+                this.is_empty = data.is_empty;
+                this.number_embroider = data.number_embroider;
+                this.number_special_draw = data.number_special_draw;
+                this.number_draw = data.number_draw;
+                this.number_embroider_sp = data.number_embroider_sp;
+                this.number_print_draw = data.number_print_draw;
+            }
+
+            this.items.triggerCreated();
+            this.FabricCanvas.renderAll()
+            if (typeof callback == 'function')
+                callback();
+        });
+        this.checkEmpty()
+    }
+
+    addItemLayer(json: any, old_work_area: any) {
+        if (this.getBorder().pixel.width === old_work_area.factor.x && this.getBorder().pixel.height === old_work_area.factor.y) {
+            this.fromJSONLayer(json);
+        } else {
+            this.fromJSONLayer(json, function () { }, false, old_work_area.size);
+        }
+    }
+
+    /**
  *
  * @private
  */
@@ -846,7 +1166,9 @@ class Side {
 
         // let canvasData = JSON.stringify({ objects: data.canvas.objects });
         let canvasData = data.canvas.objects
+        console.log(canvasData);
 
+        DrawTool.modeToolDraw = DrawTool.modeSetup.TAP_RIBBON
         this.FabricCanvas.loadFromJSON(canvasData, () => {
             if (this.backdrop) {
                 this.FabricCanvas.backgroundImage = this.backdrop;
@@ -1001,7 +1323,7 @@ class Side {
                                     path.set('fill', "rgba(0,0,0,1)");
                                 }
                             });
-                  
+
                         }
                     }
                     else if (item.type === "i-text") {

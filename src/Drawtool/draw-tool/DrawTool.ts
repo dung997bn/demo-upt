@@ -50,7 +50,7 @@ let DrawTool = {
     _originalJson: {},
 
     _designBorders: [] as any[],
-    _embroideryPaths: [],
+    _embroideryPaths: [] as any,
     is_choosing: false,
 
     is_nail: false,
@@ -85,7 +85,51 @@ let DrawTool = {
 
         this.history = new DrawHistory();
     },
+    setEmbroidery(val = false) {
+        this.is_embroidery = val;
+        if (!val) {
+            this.sides.selected._selected_path_index = -1;
+            this.modeSpecialDrawEnable = -1;
+        } else {
+            this.sides.selected._selected_path_index = 1;
+            this.modeSpecialDrawEnable = 1;
+        }
+        this.sides._collection.map((side) => {
+            side.setSelectableForDesign();
+        });
 
+        this.sides.selected.FabricCanvas.renderAll();
+    },
+
+    rec2path(rec: any) {
+        return `"M${rec.left} ${rec.top} h ${rec.width} v ${rec.height} h -${rec.width} Z"`;
+    },
+
+    recs2paths(recs: any) {
+        recs.map((r: any) => {
+            r.right = r.left + r.width;
+            r.bottom = r.top + r.height;
+        });
+
+        let lefts = recs.map((r: any) => { return r.left });
+        let rights = recs.map((r: any) => { return r.right });
+        let tops = recs.map((r: any) => { return r.top });
+        let bottoms = recs.map((r: any) => { return r.bottom });
+        let minLeft = Math.min(...lefts);
+        let maxRight = Math.max(...rights);
+        let minTop = Math.min(...tops);
+        let maxBottom = Math.max(...bottoms);
+        let width = maxRight - minLeft;
+        let height = maxBottom - minTop;
+
+        let paths = `"M${minLeft} ${minTop} h${0.01} v${0.01} h-${0.01} v-${0.01} M${maxRight} ${maxBottom} h -${0.01} v -${0.01} h ${0.01} v ${0.01}"`;
+        Array.prototype.forEach.call(recs, (item, i) => {
+            paths += "," + this.rec2path(item);
+        });
+
+        let cmpixel = `{"left": ${minLeft},"top": ${minTop},"width": ${width},"height": ${height}}`;
+        return `{"paths": [${paths}], "cm": ${cmpixel}, "pixel": ${cmpixel}}`;
+    },
     setLayerSetup(val = 0) {
         this.modeSpecialDrawEnable = val;
         if (this.modeSpecialDrawEnable < 1) {
