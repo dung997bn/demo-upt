@@ -25,9 +25,9 @@ class colorPicker {
             originX: 'center',
             originY: 'center',
             selectable: false,
-            excludeFromExport: true,
+            // excludeFromExport: true,
             evented: false,
-            shadow: new fabric.Shadow('2px 2px 10px rgba(0,0,0,0.2)'),
+            // shadow: new fabric.Shadow('2px 2px 10px rgba(0,0,0,0.2)'),
             lockUniScaling: true
         });
 

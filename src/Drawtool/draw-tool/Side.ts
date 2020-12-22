@@ -356,11 +356,8 @@ class Side {
                 proportionsOnOld = this.FabricBorder.height / sizeOldWorkArea.height;
             }
         }
-console.log(data.canvas.objects);
-
         let canvasData = JSON.stringify({ objects: data.canvas.objects });
-        console.log(canvasData);
-        
+
 
         this.FabricCanvas.loadFromJSON(canvasData, () => {
             if (this.backdrop) {
@@ -425,6 +422,14 @@ console.log(data.canvas.objects);
                         item.filters.push(imageProcessingColor);
                         item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
                     }
+                    else if (filter.type === "ChangeToCropPathProcessing") {
+                        let filterChangeToCrop = new (fabric.fabric.Image.filters as any).ChangeToCropPathProcessing({
+                            color: filter.color,
+                            distance: filter.distance
+                        });
+                        item.filters.push(filterChangeToCrop);
+                        item.applyFilters(this.FabricCanvas.renderAll.bind(this.FabricCanvas));
+                    }
                 });
             }
 
@@ -441,7 +446,7 @@ console.log(data.canvas.objects);
                 this.number_print_draw = data.number_print_draw;
             }
 
-            this.items.triggerCreated();
+            // this.items.triggerCreated();
             this.FabricCanvas.renderAll()
             if (typeof callback == 'function')
                 callback();
@@ -484,7 +489,7 @@ console.log(data.canvas.objects);
         let stepY = cm.height;
 
         this.grid = new fabric.fabric.Group(undefined, {
-            excludeFromExport: true,
+            // excludeFromExport: true,
             hasControls: false,
             hoverCursor: 'default',
             selectable: false
@@ -531,7 +536,7 @@ console.log(data.canvas.objects);
         let stepY = cm.height;
 
         this.ruler = new fabric.fabric.Group(undefined, {
-            excludeFromExport: true,
+            // excludeFromExport: true,
             hasControls: false,
             hoverCursor: 'default',
             selectable: false
@@ -976,7 +981,7 @@ console.log(data.canvas.objects);
         let cm = this.cmSize;
 
         this.workspaceGrid = new fabric.fabric.Group(undefined, {
-            excludeFromExport: true,
+            // excludeFromExport: true,
             hasControls: false,
             hoverCursor: 'default',
             selectable: false
@@ -1028,7 +1033,7 @@ console.log(data.canvas.objects);
         let cm = this.cmSize;
 
         this.workspaceRuler = new fabric.fabric.Group(undefined, {
-            excludeFromExport: true,
+            // excludeFromExport: true,
             hasControls: false,
             hoverCursor: 'default',
             selectable: false

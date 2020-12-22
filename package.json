@@ -10,7 +10,7 @@
     "@types/node": "^12.19.8",
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
-    "fabric": "^3.6.3",
+    "fabric": "^1.5.54",
     "node-sass": "^5.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -46,6 +46,6 @@
     ]
   },
   "devDependencies": {
-    "@types/fabric": "^3.6.3"
+    "@types/fabric": "^1.5.54"
   }
 }

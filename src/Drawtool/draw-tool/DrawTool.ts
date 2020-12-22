@@ -4,6 +4,11 @@ import DrawHistory from "./DrawHistory";
 import Side from "./Side";
 import Sides from "./Sides";
 
+import '../utils/custom-filter/changeToCropPathProcessing';
+import '../utils/custom-filter/imageChangeColorAll';
+import '../utils/custom-filter/imageProcessingColor';
+import '../utils/custom-filter/removeColor';
+
 let DrawTool = {
     editable: false,
     container: {
