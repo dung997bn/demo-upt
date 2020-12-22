@@ -631,8 +631,8 @@ class Side {
 
                 // imgObj.scaleToWidth(this.size.width* (this.FabricCanvas.height / this.size.height)* this.bgProportions);
                 // imgObj.scaleToHeight(this.size.height* (this.FabricCanvas.height / this.size.height)* this.bgProportions);
-                imgObj.scaleToWidth(this.FabricCanvas.width);
-                imgObj.scaleToHeight(this.FabricCanvas.height);
+                // imgObj.scaleToWidth(this.FabricCanvas.width);
+                // imgObj.scaleToHeight(this.FabricCanvas.height);
                 this.FabricCanvas.renderAll();
             })
 

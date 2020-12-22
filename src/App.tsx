@@ -3,6 +3,8 @@ import './App.css';
 import DrawToolComponent from './Containers/DrawToolComponent';
 import DrawTool from './Drawtool/draw-tool/DrawTool';
 import { dataDesign, dataObj, stickerCategories, detailDesign } from './data/datadb'
+import HeaderComponent from './Containers/Header';
+import ToolBarComponent from './Containers/ToolBar';
 interface Props { }
 
 interface State {
@@ -18,7 +20,6 @@ class App extends Component<Props, State> {
 
     super(props)
 
-    this.loadToolBar = this.loadToolBar.bind(this)
     this.showDesign = this.showDesign.bind(this)
     this.applyDesign = this.applyDesign.bind(this)
     this.state.dataObj = dataObj.colors
@@ -26,14 +27,6 @@ class App extends Component<Props, State> {
 
   componentDidMount() {
     this.loadProduct()
-  }
-
-  loadToolBar() {
-    return <Fragment>
-      <h1>ToolBar</h1>
-      <button onClick={() => this.showDesign()}>Show Design</button>
-      <button onClick={() => this.applyDesign()}>Apply Design</button>
-    </Fragment>
   }
 
   applyDesign() {
@@ -419,7 +412,7 @@ class App extends Component<Props, State> {
     console.log(data);
 
     DrawTool.importJSON(JSON.stringify(data)).then(() => {
-      DrawTool.sides.select(color.sides[1].ProductColorSide.content.id);
+      DrawTool.sides.select(color.sides[0].ProductColorSide.content.id);
       // store.dispatch(product_action.setLoadingData(false));
 
       for (var i = 0; i < data.length; i++) {
@@ -460,20 +453,16 @@ class App extends Component<Props, State> {
   render() {
     return (
       <div className="App" >
+        <HeaderComponent />
         <div className="app-container">
-
+          <ToolBarComponent />
           <div className="app-container-inner">
-            <div className="toolbar">
-              {this.loadToolBar()}
-            </div>
             <DrawToolComponent colors={this.state.dataObj}></DrawToolComponent>
           </div>
         </div>
-
       </div >
     );
   }
-
 }
 
 export default App;
