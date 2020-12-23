@@ -11,7 +11,6 @@ interface State {
 
 class HeaderComponent extends Component<Props, State>{
 
-
     render() {
         return (
             <div className="app-header">
